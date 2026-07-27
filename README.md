@@ -91,7 +91,7 @@ MilkWala/
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-username/MilkWala.git
+   git clone https://github.com/sagarworlds/MilkWala.git
    cd MilkWala
    ```
 
@@ -125,6 +125,16 @@ MilkWala/
 | `Payments` & `WalletTransactions` | Wallet recharge credits, delivery debits, and payment ledger |
 | `Expenses` & `Complaints` | Vendor operational expenses and customer support tickets |
 | `SyncQueue` & `SyncLogs` | Offline mutation queue, status tracking, and sync audit logs |
+
+---
+
+## ⭐ Show Your Support & 🐛 Report Issues
+
+If you find **MilkWala** helpful or useful, please consider giving this repository a **Star ⭐**!
+
+- 🌟 **Star this Repository**: [sagarworlds/MilkWala](https://github.com/sagarworlds/MilkWala)
+- 🐛 **Report Issues or Request Features**: [MilkWala Issues](https://github.com/sagarworlds/MilkWala/issues)
+- 🤝 **Contributions**: Pull requests, feedback, and feature suggestions are always welcome!
 
 ---
 
