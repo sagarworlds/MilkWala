@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:MilkWala.Controls"
+             x:Class="MilkWala.Views.Vendor.ProcurementPage"
+             BackgroundColor="#F8FAFC"
+             Title="Farmer Milk Procurement">
+
+    <Grid RowDefinitions="Auto, *">
+        <controls:SyncHeaderView Grid.Row="0"/>
+
+        <ScrollView Grid.Row="1" Padding="16">
+            <VerticalStackLayout Spacing="16">
+
+                <!-- Log Procurement Form -->
+                <Border StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Farmer Milk Purchase &amp; Fat Test" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
+
+                        <Label Text="Select Farmer / Supplier:" FontSize="12" TextColor="#475569"/>
+                        <Picker ItemsSource="{Binding Suppliers}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding SelectedSupplier}" BackgroundColor="#F1F5F9" TextColor="#0F172A"/>
+
+                        <Grid ColumnDefinitions="*, *" ColumnSpacing="8">
+                            <VerticalStackLayout Grid.Column="0">
+                                <Label Text="Procured Litres" FontSize="11" TextColor="#64748B"/>
+                                <Entry Text="{Binding LitresProcured}" Keyboard="Numeric" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout Grid.Column="1">
+                                <Label Text="Tested Fat %" FontSize="11" TextColor="#64748B"/>
+                                <Entry Text="{Binding FatPercent}" Keyboard="Numeric" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*, *" ColumnSpacing="8">
+                            <VerticalStackLayout Grid.Column="0">
+                                <Label Text="Calculated Rate / Litre" FontSize="11" TextColor="#64748B"/>
+                                <Label Text="{Binding CalculatedRate, Converter={StaticResource CurrencyFormatConverter}}" FontSize="16" FontAttributes="Bold" TextColor="#0EA5E9"/>
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout Grid.Column="1">
+                                <Label Text="Total Purchase Amount" FontSize="11" TextColor="#64748B"/>
+                                <Label Text="{Binding TotalProcurementAmount, Converter={StaticResource CurrencyFormatConverter}}" FontSize="16" FontAttributes="Bold" TextColor="#10B981"/>
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <Button Text="Record Milk Purchase" Command="{Binding RecordProcurementCommand}" BackgroundColor="#10B981" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Purchase History Ledger -->
+                <Label Text="Procurement History Ledger" FontSize="16" FontAttributes="Bold" TextColor="#1E293B" Margin="0,8,0,0"/>
+
+                <CollectionView ItemsSource="{Binding Procurements}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border StrokeShape="RoundRectangle 12" BackgroundColor="White" Stroke="#E2E8F0" Padding="12" Margin="0,4">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                        <Label Text="{Binding SupplierName}" FontSize="14" FontAttributes="Bold" TextColor="#0F172A"/>
+                                        <Label Text="{Binding FatPercent, StringFormat='Fat: {0}% • SNF: 8.5%', Source={RelativeSource Self}}" FontSize="12" TextColor="#64748B"/>
+                                        <Label Text="{Binding Date, StringFormat='{0:dd MMM yyyy, hh:mm tt}'}" FontSize="11" TextColor="#94A3B8"/>
+                                    </VerticalStackLayout>
+
+                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                        <Label Text="{Binding Litres, StringFormat='{0} Litres'}" FontSize="14" FontAttributes="Bold" TextColor="#0EA5E9" HorizontalOptions="End"/>
+                                        <Label Text="{Binding TotalAmount, Converter={StaticResource CurrencyFormatConverter}}" FontSize="13" FontAttributes="Bold" TextColor="#10B981" HorizontalOptions="End"/>
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

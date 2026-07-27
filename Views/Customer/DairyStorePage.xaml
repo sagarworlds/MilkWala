@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:MilkWala.Controls"
+             x:Class="MilkWala.Views.Customer.DairyStorePage"
+             BackgroundColor="#F8FAFC"
+             Title="Dairy Store">
+
+    <Grid RowDefinitions="Auto, *">
+        <controls:SyncHeaderView Grid.Row="0"/>
+
+        <ScrollView Grid.Row="1" Padding="16">
+            <VerticalStackLayout Spacing="16">
+
+                <Label Text="Fresh Dairy Products Store" FontSize="18" FontAttributes="Bold" TextColor="#0F172A"/>
+
+                <!-- Products Catalog Grid -->
+                <CollectionView ItemsSource="{Binding DairyProducts}">
+                    <CollectionView.ItemsLayout>
+                        <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="8" VerticalItemSpacing="8"/>
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="12">
+                                <VerticalStackLayout Spacing="6">
+                                    <Label Text="{Binding Name}" FontSize="14" FontAttributes="Bold" TextColor="#0F172A"/>
+                                    <Label Text="{Binding Unit}" FontSize="11" TextColor="#94A3B8"/>
+                                    <Label Text="{Binding Price, Converter={StaticResource CurrencyFormatConverter}}" FontSize="15" FontAttributes="Bold" TextColor="#0EA5E9"/>
+
+                                    <Button Text="+ Add to Bag"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OrderProductCommand}"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="#10B981" TextColor="White" FontSize="12" CornerRadius="8" HeightRequest="36" Margin="0,4,0,0"/>
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- My Orders List -->
+                <Label Text="My Scheduled Store Deliveries" FontSize="16" FontAttributes="Bold" TextColor="#1E293B" Margin="0,8,0,0"/>
+
+                <CollectionView ItemsSource="{Binding MyStoreOrders}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border StrokeShape="RoundRectangle 12" BackgroundColor="White" Stroke="#E2E8F0" Padding="12" Margin="0,4">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                        <Label Text="{Binding ProductName}" FontSize="14" FontAttributes="Bold" TextColor="#0F172A"/>
+                                        <Label Text="{Binding Status}" FontSize="11" TextColor="#10B981"/>
+                                        <Label Text="{Binding OrderDate, StringFormat='{0:dd MMM yyyy}'}" FontSize="11" TextColor="#94A3B8"/>
+                                    </VerticalStackLayout>
+
+                                    <Label Grid.Column="1" Text="{Binding TotalPrice, Converter={StaticResource CurrencyFormatConverter}}" FontSize="15" FontAttributes="Bold" TextColor="#0EA5E9" VerticalOptions="Center"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MilkWala.Controls.SyncHeaderView">
+    <Border StrokeShape="RoundRectangle 0,0,16,16"
+            BackgroundColor="#0F172A"
+            Padding="16,12"
+            Margin="0">
+        <Grid ColumnDefinitions="*, Auto">
+            <StackLayout Grid.Column="0" VerticalOptions="Center">
+                <Label Text="{Binding Title}"
+                       FontSize="20"
+                       FontAttributes="Bold"
+                       TextColor="White" />
+                <HorizontalStackLayout Spacing="8" Margin="0,4,0,0">
+                    <Border StrokeShape="RoundRectangle 12"
+                            Padding="8,3"
+                            BackgroundColor="{Binding IsOnline, Converter={StaticResource StatusToColorConverter}}">
+                        <Label Text="{Binding SyncStatusText}"
+                               FontSize="11"
+                               TextColor="White"
+                               FontAttributes="Bold" />
+                    </Border>
+                </HorizontalStackLayout>
+            </StackLayout>
+
+            <Button Grid.Column="1"
+                    Text="{Binding IsOnline, StringFormat='Simulate {0:Offline;0;Offline}'}"
+                    Command="{Binding ToggleSyncCommand}"
+                    BackgroundColor="#1E293B"
+                    TextColor="#38BDF8"
+                    BorderColor="#38BDF8"
+                    BorderWidth="1"
+                    CornerRadius="8"
+                    FontSize="12"
+                    Padding="12,6"
+                    VerticalOptions="Center" />
+        </Grid>
+    </Border>
+</ContentView>

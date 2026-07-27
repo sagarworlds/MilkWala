@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:MilkWala.Controls"
+             x:Class="MilkWala.Views.Vendor.VendorReportsPage"
+             BackgroundColor="#F8FAFC"
+             Title="Reports &amp; Analytics">
+
+    <Grid RowDefinitions="Auto, *">
+        <controls:SyncHeaderView Grid.Row="0"/>
+
+        <ScrollView Grid.Row="1" Padding="16">
+            <VerticalStackLayout Spacing="16">
+
+                <Label Text="Monthly Business Summary" FontSize="18" FontAttributes="Bold" TextColor="#0F172A"/>
+
+                <!-- Net Profit Hero Banner -->
+                <Border StrokeShape="RoundRectangle 16" BackgroundColor="#0F172A" Padding="20" StrokeThickness="0">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Net Profit (Sales - Expenses)" FontSize="13" TextColor="#94A3B8"/>
+                        <Label Text="{Binding NetProfit, Converter={StaticResource CurrencyFormatConverter}}" FontSize="32" FontAttributes="Bold" TextColor="#10B981"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Detailed Financial Cards -->
+                <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto" RowSpacing="12" ColumnSpacing="12">
+                    <Border Grid.Row="0" Grid.Column="0" StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Total Sales Revenue" FontSize="11" TextColor="#64748B"/>
+                            <Label Text="{Binding TotalSales, Converter={StaticResource CurrencyFormatConverter}}" FontSize="18" FontAttributes="Bold" TextColor="#0EA5E9"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Grid.Row="0" Grid.Column="1" StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Total Litres Sold" FontSize="11" TextColor="#64748B"/>
+                            <Label Text="{Binding TotalLitresSold, StringFormat='{0:F1} Litres'}" FontSize="18" FontAttributes="Bold" TextColor="#8B5CF6"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Grid.Row="1" Grid.Column="0" StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Cash/UPI Collections" FontSize="11" TextColor="#64748B"/>
+                            <Label Text="{Binding TotalCollection, Converter={StaticResource CurrencyFormatConverter}}" FontSize="18" FontAttributes="Bold" TextColor="#10B981"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Grid.Row="1" Grid.Column="1" StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Total Business Expenses" FontSize="11" TextColor="#64748B"/>
+                            <Label Text="{Binding TotalExpenses, Converter={StaticResource CurrencyFormatConverter}}" FontSize="18" FontAttributes="Bold" TextColor="#EF4444"/>
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

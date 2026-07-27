@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:MilkWala.Controls"
+             x:Class="MilkWala.Views.Vendor.DeliveryManagementPage"
+             BackgroundColor="#F8FAFC"
+             Title="Delivery Management">
+
+    <Grid RowDefinitions="Auto, *">
+        <controls:SyncHeaderView Grid.Row="0"/>
+
+        <ScrollView Grid.Row="1" Padding="16">
+            <VerticalStackLayout Spacing="16">
+
+                <Label Text="Today's Delivery Checklist" FontSize="18" FontAttributes="Bold" TextColor="#0F172A"/>
+
+                <CollectionView ItemsSource="{Binding Deliveries}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16" Margin="0,4">
+                                <VerticalStackLayout Spacing="10">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <VerticalStackLayout Grid.Column="0">
+                                            <Label Text="{Binding CustomerName}" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
+                                            <Label Text="{Binding Address}" FontSize="12" TextColor="#64748B"/>
+                                        </VerticalStackLayout>
+
+                                        <Border Grid.Column="1" StrokeShape="RoundRectangle 12" Padding="8,4"
+                                                BackgroundColor="{Binding Status, Converter={StaticResource StatusToColorConverter}}">
+                                            <Label Text="{Binding Status}" FontSize="12" TextColor="White" FontAttributes="Bold"/>
+                                        </Border>
+                                    </Grid>
+
+                                    <Label Text="{Binding QuantityLitres, StringFormat='Required: {0} Litres ({1})', Source={RelativeSource Self}}" FontSize="13" TextColor="#0EA5E9" FontAttributes="Bold"/>
+
+                                    <Grid ColumnDefinitions="*, *" ColumnSpacing="8">
+                                        <Button Grid.Column="0" Text="✓ Mark Delivered"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MarkDeliveredCommand}"
+                                                CommandParameter="{Binding .}"
+                                                BackgroundColor="#10B981" TextColor="White" CornerRadius="8" HeightRequest="40"/>
+
+                                        <Button Grid.Column="1" Text="✕ Mark Skipped"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MarkSkippedCommand}"
+                                                CommandParameter="{Binding .}"
+                                                BackgroundColor="#F59E0B" TextColor="White" CornerRadius="8" HeightRequest="40"/>
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:MilkWala.Controls"
+             x:Class="MilkWala.Views.Delivery.DeliveryBoyPage"
+             BackgroundColor="#F8FAFC"
+             Title="Delivery Staff Module">
+
+    <Grid RowDefinitions="Auto, *">
+        <controls:SyncHeaderView Grid.Row="0"/>
+
+        <ScrollView Grid.Row="1" Padding="16">
+            <VerticalStackLayout Spacing="16">
+
+                <!-- Assigned Route Card -->
+                <Border StrokeShape="RoundRectangle 16" BackgroundColor="#0F172A" Padding="16" StrokeThickness="0">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Assigned Delivery Route" FontSize="12" TextColor="#94A3B8"/>
+                        <Label Text="{Binding AssignedRouteName}" FontSize="18" FontAttributes="Bold" TextColor="White"/>
+
+                        <Grid ColumnDefinitions="*, *" Margin="0,8,0,0">
+                            <Label Grid.Column="0" Text="{Binding CompletedDeliveries, StringFormat='Completed: {0}'}" FontSize="13" TextColor="#10B981" FontAttributes="Bold"/>
+                            <Label Grid.Column="1" Text="{Binding TotalPendingDeliveries, StringFormat='Pending: {0}'}" FontSize="13" TextColor="#F59E0B" FontAttributes="Bold"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Customer Delivery Sequence List -->
+                <Label Text="Delivery Route Sequence" FontSize="16" FontAttributes="Bold" TextColor="#1E293B" Margin="0,8,0,0"/>
+
+                <CollectionView ItemsSource="{Binding RouteDeliveries}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16" Margin="0,4">
+                                <VerticalStackLayout Spacing="10">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <VerticalStackLayout Grid.Column="0">
+                                            <Label Text="{Binding CustomerName}" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
+                                            <Label Text="{Binding Address}" FontSize="12" TextColor="#64748B"/>
+                                        </VerticalStackLayout>
+
+                                        <Border Grid.Column="1" StrokeShape="RoundRectangle 12" Padding="8,4"
+                                                BackgroundColor="{Binding Status, Converter={StaticResource StatusToColorConverter}}">
+                                            <Label Text="{Binding Status}" FontSize="12" TextColor="White" FontAttributes="Bold"/>
+                                        </Border>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <Label Grid.Column="0" Text="{Binding MilkType, StringFormat='{0} Milk: {1} Litres', Source={RelativeSource Self}}" FontSize="13" TextColor="#0EA5E9" FontAttributes="Bold"/>
+                                        <Label Grid.Column="1" Text="1-Tap Mark" FontSize="11" TextColor="#94A3B8"/>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="*, *" ColumnSpacing="8">
+                                        <Button Grid.Column="0" Text="✓ Delivered"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MarkDeliveredCommand}"
+                                                CommandParameter="{Binding .}"
+                                                BackgroundColor="#10B981" TextColor="White" CornerRadius="8" HeightRequest="40"/>
+
+                                        <Button Grid.Column="1" Text="✕ Skip"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MarkSkippedCommand}"
+                                                CommandParameter="{Binding .}"
+                                                BackgroundColor="#F59E0B" TextColor="White" CornerRadius="8" HeightRequest="40"/>
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

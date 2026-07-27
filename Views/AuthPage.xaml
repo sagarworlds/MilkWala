@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MilkWala.ViewModels"
+             xmlns:converters="clr-namespace:MilkWala.Converters"
+             x:Class="MilkWala.Views.AuthPage"
+             BackgroundColor="#0F172A"
+             Title="Welcome to MilkWala">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+            <converters:StringHasTextConverter x:Key="StringHasTextConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="20" VerticalOptions="Center">
+
+            <!-- App Logo & Title Header -->
+            <Image Source="dotnet_bot.png" HeightRequest="100" HorizontalOptions="Center" Margin="0,20,0,0"/>
+            
+            <Label Text="MilkWala"
+                   FontSize="36"
+                   FontAttributes="Bold"
+                   TextColor="#38BDF8"
+                   HorizontalOptions="Center" />
+
+            <Label Text="Smart Dairy &amp; Milk Delivery Platform"
+                   FontSize="14"
+                   TextColor="#94A3B8"
+                   HorizontalOptions="Center" />
+
+            <!-- Role Selector Card -->
+            <Border StrokeShape="RoundRectangle 16"
+                    BackgroundColor="#1E293B"
+                    Stroke="#334155"
+                    Padding="16"
+                    Margin="0,10">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Select Profile Role:"
+                           FontSize="14"
+                           FontAttributes="Bold"
+                           TextColor="#E2E8F0" />
+
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                        <Button Grid.Column="0"
+                                Text="Customer"
+                                Command="{Binding SelectRoleCommand}"
+                                CommandParameter="Customer"
+                                BackgroundColor="#0EA5E9"
+                                TextColor="White"
+                                CornerRadius="8"
+                                FontSize="12" />
+
+                        <Button Grid.Column="1"
+                                Text="Vendor"
+                                Command="{Binding SelectRoleCommand}"
+                                CommandParameter="Vendor"
+                                BackgroundColor="#8B5CF6"
+                                TextColor="White"
+                                CornerRadius="8"
+                                FontSize="12" />
+
+                        <Button Grid.Column="2"
+                                Text="Delivery"
+                                Command="{Binding SelectRoleCommand}"
+                                CommandParameter="DeliveryBoy"
+                                BackgroundColor="#10B981"
+                                TextColor="White"
+                                CornerRadius="8"
+                                FontSize="12" />
+                    </Grid>
+
+                    <Label Text="{Binding SelectedRole, StringFormat='Active Role: {0}'}"
+                           FontSize="12"
+                           FontAttributes="Italic"
+                           TextColor="#38BDF8"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Login Form Card -->
+            <Border StrokeShape="RoundRectangle 16"
+                    BackgroundColor="#1E293B"
+                    Stroke="#334155"
+                    Padding="20">
+                <VerticalStackLayout Spacing="14">
+
+                    <Label Text="Mobile Login"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="White" />
+
+                    <Label Text="Enter your registered 10-digit mobile number"
+                           FontSize="12"
+                           TextColor="#94A3B8" />
+
+                    <Entry Text="{Binding MobileNumber}"
+                           Placeholder="Mobile Number"
+                           Keyboard="Telephone"
+                           MaxLength="10"
+                           BackgroundColor="#0F172A"
+                           TextColor="White"
+                           PlaceholderColor="#64748B"
+                           HeightRequest="48"/>
+
+                    <Button Text="Get OTP"
+                            Command="{Binding SendOtpCommand}"
+                            BackgroundColor="#0EA5E9"
+                            TextColor="White"
+                            FontAttributes="Bold"
+                            CornerRadius="8"
+                            HeightRequest="48"/>
+
+                    <VerticalStackLayout IsVisible="{Binding IsOtpSent}" Spacing="10" Margin="0,10,0,0">
+                        <Entry Text="{Binding OtpCode}"
+                               Placeholder="Enter OTP (Default: 1234)"
+                               Keyboard="Numeric"
+                               MaxLength="4"
+                               BackgroundColor="#0F172A"
+                               TextColor="White"
+                               PlaceholderColor="#64748B"
+                               HeightRequest="48"/>
+
+                        <Button Text="Verify &amp; Continue"
+                                Command="{Binding VerifyOtpAndLoginCommand}"
+                                BackgroundColor="#10B981"
+                                TextColor="White"
+                                FontAttributes="Bold"
+                                CornerRadius="8"
+                                HeightRequest="48"/>
+                    </VerticalStackLayout>
+
+                    <Label Text="{Binding StatusMessage}"
+                           TextColor="#F59E0B"
+                           FontSize="13"
+                           HorizontalOptions="Center"
+                           IsVisible="{Binding StatusMessage, Converter={StaticResource StringHasTextConverter}}"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="Offline-First Enabled • Local SQLite Sync"
+                   FontSize="11"
+                   TextColor="#64748B"
+                   HorizontalOptions="Center"
+                   Margin="0,10,0,20"/>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

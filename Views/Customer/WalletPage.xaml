@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:MilkWala.Controls"
+             x:Class="MilkWala.Views.Customer.WalletPage"
+             BackgroundColor="#F8FAFC"
+             Title="Wallet &amp; Payments">
+
+    <Grid RowDefinitions="Auto, *">
+        <controls:SyncHeaderView Grid.Row="0"/>
+
+        <ScrollView Grid.Row="1" Padding="16">
+            <VerticalStackLayout Spacing="16">
+
+                <!-- Wallet Card -->
+                <Border StrokeShape="RoundRectangle 16" BackgroundColor="#0F172A" Padding="20" StrokeThickness="0">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Current Wallet Balance" FontSize="13" TextColor="#94A3B8"/>
+                        <Label Text="{Binding Balance, Converter={StaticResource CurrencyFormatConverter}}" FontSize="32" FontAttributes="Bold" TextColor="#10B981"/>
+                        <Label Text="Auto-debit active for daily deliveries" FontSize="11" TextColor="#CBD5E1"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Recharge Simulator Card -->
+                <Border StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
+                    <VerticalStackLayout Spacing="14">
+                        <Label Text="Quick Wallet Recharge (UPI / Cash)" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
+
+                        <Grid ColumnDefinitions="*, *, *" ColumnSpacing="8">
+                            <Button Grid.Column="0" Text="+ ₹200" Command="{Binding AddMoneyCommand}" CommandParameter="200" BackgroundColor="#F1F5F9" TextColor="#0EA5E9" CornerRadius="8"/>
+                            <Button Grid.Column="1" Text="+ ₹500" Command="{Binding AddMoneyCommand}" CommandParameter="500" BackgroundColor="#F1F5F9" TextColor="#0EA5E9" CornerRadius="8"/>
+                            <Button Grid.Column="2" Text="+ ₹1000" Command="{Binding AddMoneyCommand}" CommandParameter="1000" BackgroundColor="#F1F5F9" TextColor="#0EA5E9" CornerRadius="8"/>
+                        </Grid>
+
+                        <Entry Text="{Binding RechargeAmount}" Placeholder="Enter Custom Amount" Keyboard="Numeric" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
+
+                        <Button Text="Proceed to Pay via UPI" Command="{Binding AddMoneyCommand}" BackgroundColor="#10B981" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Transactions History -->
+                <Label Text="Transaction History" FontSize="16" FontAttributes="Bold" TextColor="#1E293B" Margin="0,8,0,0"/>
+
+                <CollectionView ItemsSource="{Binding Transactions}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border StrokeShape="RoundRectangle 12" BackgroundColor="White" Stroke="#E2E8F0" Padding="12" Margin="0,4">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                        <Label Text="{Binding Description}" FontSize="13" FontAttributes="Bold" TextColor="#0F172A"/>
+                                        <Label Text="{Binding Date, StringFormat='{0:dd MMM yyyy, hh:mm tt}'}" FontSize="11" TextColor="#94A3B8"/>
+                                    </VerticalStackLayout>
+
+                                    <Label Grid.Column="1" Text="{Binding Amount, Converter={StaticResource CurrencyFormatConverter}}"
+                                           FontSize="15" FontAttributes="Bold"
+                                           TextColor="{Binding TransactionType, Converter={StaticResource StatusToColorConverter}}" VerticalOptions="Center"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

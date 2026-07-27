@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="456" height="456" viewBox="0 0 456 456" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <!-- Circular Background Shield -->
+    <circle cx="228" cy="228" r="150" fill="#0EA5E9" opacity="0.25"/>
+
+    <!-- Milk Bottle Body -->
+    <path d="M 190 100 H 266 V 130 H 190 Z" fill="#FFFFFF" />
+    <path d="M 200 130 L 175 180 V 340 C 175 354 186 365 200 365 H 256 C 270 365 281 354 281 340 V 180 L 256 130 Z" fill="#FFFFFF" />
+
+    <!-- Blue Dairy Level & Wave -->
+    <path d="M 195 200 Q 228 185 261 200 V 335 C 261 343 255 349 247 349 H 209 C 201 349 195 343 195 335 Z" fill="#0EA5E9" />
+
+    <!-- Milk Drop Icon -->
+    <path d="M 228 225 C 242 260 248 270 248 280 C 248 291 239 300 228 300 C 217 300 208 291 208 280 C 208 270 214 260 228 225 Z" fill="#FFFFFF" />
+
+    <!-- Green Leaf Badge -->
+    <path d="M 252 210 C 280 200 290 225 265 240 C 255 225 252 210 252 210 Z" fill="#10B981" />
+</svg>

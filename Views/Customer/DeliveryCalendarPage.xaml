@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:MilkWala.Controls"
+             x:Class="MilkWala.Views.Customer.DeliveryCalendarPage"
+             BackgroundColor="#F8FAFC"
+             Title="Delivery Calendar">
+
+    <Grid RowDefinitions="Auto, *">
+        <controls:SyncHeaderView Grid.Row="0"/>
+
+        <ScrollView Grid.Row="1" Padding="16">
+            <VerticalStackLayout Spacing="16">
+
+                <!-- Month Selector Bar -->
+                <Border StrokeShape="RoundRectangle 12" BackgroundColor="#0F172A" Padding="12">
+                    <Grid ColumnDefinitions="Auto, *, Auto">
+                        <Button Grid.Column="0" Text="◀" Command="{Binding PreviousMonthCommand}" BackgroundColor="Transparent" TextColor="White" FontSize="16"/>
+                        <Label Grid.Column="1" Text="{Binding SelectedMonth, StringFormat='{0:MMMM yyyy}'}" FontSize="18" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        <Button Grid.Column="2" Text="▶" Command="{Binding NextMonthCommand}" BackgroundColor="Transparent" TextColor="White" FontSize="16"/>
+                    </Grid>
+                </Border>
+
+                <!-- Monthly Totals Bar -->
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                    <Border Grid.Column="0" StrokeShape="RoundRectangle 12" BackgroundColor="White" Stroke="#E2E8F0" Padding="10">
+                        <VerticalStackLayout>
+                            <Label Text="Delivered" FontSize="11" TextColor="#64748B"/>
+                            <Label Text="{Binding TotalDeliveredDays, StringFormat='{0} Days'}" FontSize="14" FontAttributes="Bold" TextColor="#10B981"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Grid.Column="1" StrokeShape="RoundRectangle 12" BackgroundColor="White" Stroke="#E2E8F0" Padding="10">
+                        <VerticalStackLayout>
+                            <Label Text="Skipped/Hold" FontSize="11" TextColor="#64748B"/>
+                            <Label Text="{Binding TotalSkippedDays, StringFormat='{0} Days'}" FontSize="14" FontAttributes="Bold" TextColor="#F59E0B"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Grid.Column="2" StrokeShape="RoundRectangle 12" BackgroundColor="White" Stroke="#E2E8F0" Padding="10">
+                        <VerticalStackLayout>
+                            <Label Text="Total Milk" FontSize="11" TextColor="#64748B"/>
+                            <Label Text="{Binding TotalLitres, StringFormat='{0:F1} L'}" FontSize="14" FontAttributes="Bold" TextColor="#0EA5E9"/>
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <!-- Calendar Delivery Cards Collection -->
+                <CollectionView ItemsSource="{Binding CalendarDeliveries}">
+                    <CollectionView.ItemsLayout>
+                        <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="8" VerticalItemSpacing="8"/>
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border StrokeShape="RoundRectangle 12" BackgroundColor="White" Stroke="#E2E8F0" Padding="12">
+                                <VerticalStackLayout Spacing="6">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <Label Grid.Column="0" Text="{Binding DeliveryDate, StringFormat='{0:dd MMM}'}" FontSize="14" FontAttributes="Bold" TextColor="#0F172A"/>
+                                        <Label Grid.Column="1" Text="{Binding DeliveryDate, StringFormat='{0:ddd}'}" FontSize="11" TextColor="#94A3B8"/>
+                                    </Grid>
+
+                                    <Border StrokeShape="RoundRectangle 8" Padding="6,2"
+                                            BackgroundColor="{Binding Status, Converter={StaticResource StatusToColorConverter}}" HorizontalOptions="Start">
+                                        <Label Text="{Binding Status}" FontSize="11" TextColor="White" FontAttributes="Bold"/>
+                                    </Border>
+
+                                    <Label Text="{Binding QuantityLitres, StringFormat='Qty: {0} Litres'}" FontSize="12" TextColor="#475569"/>
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

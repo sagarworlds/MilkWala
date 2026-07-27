@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:MilkWala.Controls"
+             x:Class="MilkWala.Views.Vendor.CustomerManagementPage"
+             BackgroundColor="#F8FAFC"
+             Title="Customer Management">
+
+    <Grid RowDefinitions="Auto, *">
+        <controls:SyncHeaderView Grid.Row="0"/>
+
+        <ScrollView Grid.Row="1" Padding="16">
+            <VerticalStackLayout Spacing="16">
+
+                <!-- Add New Customer Card -->
+                <Border StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Add New Customer" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
+
+                        <Entry Text="{Binding NewCustomerName}" Placeholder="Full Name" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
+                        <Entry Text="{Binding NewCustomerMobile}" Placeholder="Mobile Number" Keyboard="Telephone" MaxLength="10" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
+                        <Entry Text="{Binding NewCustomerAddress}" Placeholder="Delivery Address &amp; Flat No" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
+
+                        <Button Text="Add Customer to Route" Command="{Binding AddCustomerCommand}" BackgroundColor="#0EA5E9" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Customer List -->
+                <Label Text="Customer Directory" FontSize="16" FontAttributes="Bold" TextColor="#1E293B" Margin="0,8,0,0"/>
+
+                <CollectionView ItemsSource="{Binding CustomerList}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border StrokeShape="RoundRectangle 12" BackgroundColor="White" Stroke="#E2E8F0" Padding="12" Margin="0,4">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                        <Label Text="{Binding Name}" FontSize="15" FontAttributes="Bold" TextColor="#0F172A"/>
+                                        <Label Text="{Binding Mobile, StringFormat='📱 {0}'}" FontSize="12" TextColor="#64748B"/>
+                                        <Label Text="{Binding Address}" FontSize="11" TextColor="#94A3B8" MaxLines="1"/>
+                                        <Label Text="{Binding PreferredQuantity, StringFormat='Prefers: {0}L {1}'}" FontSize="12" TextColor="#0EA5E9"/>
+                                    </VerticalStackLayout>
+
+                                    <Button Grid.Column="1" Text="{Binding IsActive, StringFormat='{0:Active;Inactive;Inactive}'}"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ToggleStatusCommand}"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="{Binding IsActive, Converter={StaticResource StatusToColorConverter}}"
+                                            TextColor="White" FontSize="11" CornerRadius="8" HeightRequest="36" VerticalOptions="Center"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>
