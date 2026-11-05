@@ -73,7 +73,6 @@ namespace MilkWala.ViewModels
             if (delivery == null) return;
 
             delivery.Status = DeliveryStatus.Skipped;
-            delivery.DeliveredAt = DateTime.Now;
             delivery.UpdatedAt = DateTime.UtcNow;
 
             await DbService.UpdateAsync(delivery);

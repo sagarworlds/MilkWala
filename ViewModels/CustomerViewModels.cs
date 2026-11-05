@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MilkWala.Models;
 using MilkWala.Services;
+using MilkWala.Services.Reporting;
 
 namespace MilkWala.ViewModels
 {
@@ -57,16 +58,17 @@ namespace MilkWala.ViewModels
                 var monthDeliveries = await DbService.GetCustomerDeliveriesAsync(CurrentCustomer.Id, DateTime.Today);
                 TodaysDelivery = monthDeliveries.FirstOrDefault(d => d.DeliveryDate.Date == DateTime.Today);
 
-                if (TodaysDelivery != null)
-                {
-                    TodaysDeliveryStatusText = $"{TodaysDelivery.QuantityLitres}L {TodaysDelivery.MilkType} - {TodaysDelivery.Status}";
-                }
+                // Always reassign so a previous customer's / day's status never lingers when there is no delivery today.
+                TodaysDeliveryStatusText = TodaysDelivery != null
+                    ? $"{TodaysDelivery.QuantityLitres}L {TodaysDelivery.MilkType} - {TodaysDelivery.Status}"
+                    : "No delivery scheduled today";
 
-                MonthlyLitresDelivered = monthDeliveries.Where(d => d.Status == DeliveryStatus.Delivered || d.Status == DeliveryStatus.Extra).Sum(d => d.QuantityLitres);
-                MonthlyTotalAmount = monthDeliveries.Where(d => d.Status == DeliveryStatus.Delivered || d.Status == DeliveryStatus.Extra).Sum(d => d.TotalPrice);
+                MonthlyLitresDelivered = DeliveryStats.Litres(monthDeliveries);
+                MonthlyTotalAmount = DeliveryStats.Revenue(monthDeliveries);
 
+                // The month list is sorted oldest-first, so take the newest explicitly.
                 RecentDeliveries.Clear();
-                foreach (var del in monthDeliveries.Take(7))
+                foreach (var del in DeliveryStats.MostRecent(monthDeliveries, 7))
                 {
                     RecentDeliveries.Add(del);
                 }
@@ -212,9 +214,9 @@ namespace MilkWala.ViewModels
                 CalendarDeliveries.Add(d);
             }
 
-            TotalDeliveredDays = list.Count(d => d.Status == DeliveryStatus.Delivered || d.Status == DeliveryStatus.Extra);
+            TotalDeliveredDays = list.Count(d => DeliveryStats.IsFulfilled(d.Status));
             TotalSkippedDays = list.Count(d => d.Status == DeliveryStatus.Skipped || d.Status == DeliveryStatus.Holiday);
-            TotalLitres = list.Where(d => d.Status == DeliveryStatus.Delivered || d.Status == DeliveryStatus.Extra).Sum(d => d.QuantityLitres);
+            TotalLitres = DeliveryStats.Litres(list);
 
             IsBusy = false;
         }

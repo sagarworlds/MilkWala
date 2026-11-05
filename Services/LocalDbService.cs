@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using SQLite;
-using MilkWala.Models;
+using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Storage;
+using MilkWala.Helpers;
+using MilkWala.Models;
 
 namespace MilkWala.Services
 {
@@ -12,38 +14,58 @@ namespace MilkWala.Services
     {
         private SQLiteAsyncConnection? _db;
         private readonly string _dbPath;
+        private readonly ILogger<LocalDbService> _logger;
+        private readonly SingleFlightInitializer _initializer;
 
-        public LocalDbService()
+        public LocalDbService(ILogger<LocalDbService> logger)
         {
+            _logger = logger;
             _dbPath = Path.Combine(FileSystem.AppDataDirectory, "MilkWala_v1.db");
+            _initializer = new SingleFlightInitializer(InitializeCoreAsync);
         }
 
-        public async Task InitAsync()
+        /// <summary>
+        /// Opens the database and creates missing tables. Safe to call from many places at once:
+        /// all callers share one initialisation, so we never open two connections or create tables twice.
+        /// </summary>
+        /// <exception cref="Exception">Rethrows the underlying SQLite/IO error after logging it; a later call retries.</exception>
+        public Task InitAsync() => _initializer.EnsureAsync();
+
+        private async Task InitializeCoreAsync()
         {
-            if (_db != null)
-                return;
+            var db = new SQLiteAsyncConnection(_dbPath, SQLiteOpenFlags.Create | SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.SharedCache);
 
-            _db = new SQLiteAsyncConnection(_dbPath, SQLiteOpenFlags.Create | SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.SharedCache);
+            try
+            {
+                await db.CreateTableAsync<User>();
+                await db.CreateTableAsync<LoginSession>();
+                await db.CreateTableAsync<Customer>();
+                await db.CreateTableAsync<Vendor>();
+                await db.CreateTableAsync<DeliveryRoute>();
+                await db.CreateTableAsync<Product>();
+                await db.CreateTableAsync<Delivery>();
+                await db.CreateTableAsync<Subscription>();
+                await db.CreateTableAsync<Payment>();
+                await db.CreateTableAsync<WalletTransaction>();
+                await db.CreateTableAsync<Expense>();
+                await db.CreateTableAsync<Complaint>();
+                await db.CreateTableAsync<SpecialOrder>();
+                await db.CreateTableAsync<FarmerSupplier>();
+                await db.CreateTableAsync<MilkProcurement>();
+                await db.CreateTableAsync<DairyProduct>();
+                await db.CreateTableAsync<StoreOrder>();
+                await db.CreateTableAsync<SyncQueueItem>();
+                await db.CreateTableAsync<SyncLog>();
 
-            await _db.CreateTableAsync<User>();
-            await _db.CreateTableAsync<LoginSession>();
-            await _db.CreateTableAsync<Customer>();
-            await _db.CreateTableAsync<Vendor>();
-            await _db.CreateTableAsync<DeliveryRoute>();
-            await _db.CreateTableAsync<Product>();
-            await _db.CreateTableAsync<Delivery>();
-            await _db.CreateTableAsync<Subscription>();
-            await _db.CreateTableAsync<Payment>();
-            await _db.CreateTableAsync<WalletTransaction>();
-            await _db.CreateTableAsync<Expense>();
-            await _db.CreateTableAsync<Complaint>();
-            await _db.CreateTableAsync<SpecialOrder>();
-            await _db.CreateTableAsync<FarmerSupplier>();
-            await _db.CreateTableAsync<MilkProcurement>();
-            await _db.CreateTableAsync<DairyProduct>();
-            await _db.CreateTableAsync<StoreOrder>();
-            await _db.CreateTableAsync<SyncQueueItem>();
-            await _db.CreateTableAsync<SyncLog>();
+                // Publish the connection only once every table exists, so Database never exposes a half-built schema.
+                _db = db;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to initialise local database at {DatabasePath}", _dbPath);
+                await db.CloseAsync();
+                throw;
+            }
         }
 
         public SQLiteAsyncConnection Database
@@ -101,9 +123,9 @@ namespace MilkWala.Services
             if (monthYear.HasValue)
             {
                 var start = new DateTime(monthYear.Value.Year, monthYear.Value.Month, 1);
-                var end = start.AddMonths(1).AddDays(-1);
+                var end = start.AddMonths(1);
                 return await Database.Table<Delivery>()
-                    .Where(d => d.CustomerId == customerId && d.DeliveryDate >= start && d.DeliveryDate <= end)
+                    .Where(d => d.CustomerId == customerId && d.DeliveryDate >= start && d.DeliveryDate < end)
                     .OrderBy(d => d.DeliveryDate)
                     .ToListAsync();
             }
@@ -114,12 +136,23 @@ namespace MilkWala.Services
                 .ToListAsync();
         }
 
-        public async Task<List<Delivery>> GetTodayDeliveriesAsync(DateTime date)
+        /// <summary>
+        /// Deliveries dated within [<paramref name="startInclusive"/>, <paramref name="endExclusive"/>), filtered in SQL
+        /// (DeliveryDate is indexed) instead of loading the whole table.
+        /// </summary>
+        public async Task<List<Delivery>> GetDeliveriesBetweenAsync(DateTime startInclusive, DateTime endExclusive)
         {
             await InitAsync();
-            var targetDate = date.Date;
-            var list = await Database.Table<Delivery>().ToListAsync();
-            return list.FindAll(d => d.DeliveryDate.Date == targetDate);
+            return await Database.Table<Delivery>()
+                .Where(d => d.DeliveryDate >= startInclusive && d.DeliveryDate < endExclusive)
+                .OrderBy(d => d.DeliveryDate)
+                .ToListAsync();
+        }
+
+        public Task<List<Delivery>> GetTodayDeliveriesAsync(DateTime date)
+        {
+            var start = date.Date;
+            return GetDeliveriesBetweenAsync(start, start.AddDays(1));
         }
 
         public async Task EnqueueSyncAsync(string tableName, int recordId, SyncOperation op, object itemPayload)

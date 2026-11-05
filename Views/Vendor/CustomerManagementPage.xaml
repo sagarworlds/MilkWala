@@ -37,13 +37,20 @@
                                         <Label Text="{Binding Name}" FontSize="15" FontAttributes="Bold" TextColor="#0F172A"/>
                                         <Label Text="{Binding Mobile, StringFormat='📱 {0}'}" FontSize="12" TextColor="#64748B"/>
                                         <Label Text="{Binding Address}" FontSize="11" TextColor="#94A3B8" MaxLines="1"/>
-                                        <Label Text="{Binding PreferredQuantity, StringFormat='Prefers: {0}L {1}'}" FontSize="12" TextColor="#0EA5E9"/>
+                                        <Label FontSize="12" TextColor="#0EA5E9">
+                                            <Label.Text>
+                                                <MultiBinding StringFormat="Prefers: {0}L {1}">
+                                                    <Binding Path="PreferredQuantity"/>
+                                                    <Binding Path="PreferredMilkType"/>
+                                                </MultiBinding>
+                                            </Label.Text>
+                                        </Label>
                                     </VerticalStackLayout>
 
-                                    <Button Grid.Column="1" Text="{Binding IsActive, StringFormat='{0:Active;Inactive;Inactive}'}"
+                                    <Button Grid.Column="1" Text="{Binding IsActive, Converter={StaticResource BoolToTextConverter}, ConverterParameter='Active|Inactive'}"
                                             Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ToggleStatusCommand}"
                                             CommandParameter="{Binding .}"
-                                            BackgroundColor="{Binding IsActive, Converter={StaticResource StatusToColorConverter}}"
+                                            BackgroundColor="{Binding IsActive, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#10B981|#6B7280'}"
                                             TextColor="White" FontSize="11" CornerRadius="8" HeightRequest="36" VerticalOptions="Center"/>
                                 </Grid>
                             </Border>

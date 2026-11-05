@@ -17,9 +17,9 @@
                     <Grid ColumnDefinitions="*, Auto">
                         <VerticalStackLayout Grid.Column="0" Spacing="2">
                             <Label Text="Subscription Status" FontSize="12" TextColor="#64748B"/>
-                            <Label Text="{Binding IsPaused, StringFormat='Status: {0:PAUSED;Active;Active}'}"
+                            <Label Text="{Binding IsPaused, Converter={StaticResource BoolToTextConverter}, ConverterParameter='PAUSED|Active', StringFormat='Status: {0}'}"
                                    FontSize="16" FontAttributes="Bold"
-                                   TextColor="{Binding IsPaused, Converter={StaticResource StatusToColorConverter}}"/>
+                                   TextColor="{Binding IsPaused, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#F59E0B|#10B981'}"/>
                         </VerticalStackLayout>
 
                         <Button Grid.Column="1" Text="Resume Delivery"

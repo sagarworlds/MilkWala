@@ -68,14 +68,24 @@ namespace MilkWala
 
             var app = builder.Build();
 
-            // Seed mock data on launch
-            Task.Run(async () =>
-            {
-                var seeder = app.Services.GetRequiredService<MockDataSeeder>();
-                await seeder.SeedAsync();
-            });
+            // Start seeding in the background so it overlaps with app start-up. AuthViewModel awaits the same
+            // single-flight task before opening the main shell, so no page can read the database too early.
+            _ = WarmUpSeedDataAsync(app.Services.GetRequiredService<MockDataSeeder>());
 
             return app;
+        }
+
+        private static async Task WarmUpSeedDataAsync(MockDataSeeder seeder)
+        {
+            try
+            {
+                await seeder.EnsureSeededAsync();
+            }
+            catch (Exception)
+            {
+                // Already logged by the seeder. Swallowed here only because nobody awaits this fire-and-forget
+                // call; the login flow awaits EnsureSeededAsync again, which retries and shows the error to the user.
+            }
         }
     }
 }

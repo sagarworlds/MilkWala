@@ -58,7 +58,14 @@
                                 <Grid ColumnDefinitions="*, Auto">
                                     <VerticalStackLayout Grid.Column="0" Spacing="2">
                                         <Label Text="{Binding SupplierName}" FontSize="14" FontAttributes="Bold" TextColor="#0F172A"/>
-                                        <Label Text="{Binding FatPercent, StringFormat='Fat: {0}% • SNF: 8.5%', Source={RelativeSource Self}}" FontSize="12" TextColor="#64748B"/>
+                                        <Label FontSize="12" TextColor="#64748B">
+                                            <Label.Text>
+                                                <MultiBinding StringFormat="Fat: {0}% • SNF: {1}%">
+                                                    <Binding Path="FatPercent"/>
+                                                    <Binding Path="SnfPercent"/>
+                                                </MultiBinding>
+                                            </Label.Text>
+                                        </Label>
                                         <Label Text="{Binding Date, StringFormat='{0:dd MMM yyyy, hh:mm tt}'}" FontSize="11" TextColor="#94A3B8"/>
                                     </VerticalStackLayout>
 

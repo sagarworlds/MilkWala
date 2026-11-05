@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MilkWala.Models;
 using MilkWala.Services;
+using MilkWala.Services.Reporting;
 
 namespace MilkWala.ViewModels
 {
@@ -62,7 +63,11 @@ namespace MilkWala.ViewModels
 
             var payments = await DbService.GetAllAsync<Payment>();
             TodayCollection = payments.Where(p => p.PaymentDate.Date == DateTime.Today).Sum(p => p.Amount);
-            MonthlyRevenue = todayDeliveries.Where(d => d.Status == DeliveryStatus.Delivered || d.Status == DeliveryStatus.Extra).Sum(d => d.TotalPrice);
+
+            // Revenue for the whole current month, not just today's deliveries.
+            var monthStart = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+            var monthDeliveries = await DbService.GetDeliveriesBetweenAsync(monthStart, monthStart.AddMonths(1));
+            MonthlyRevenue = DeliveryStats.Revenue(monthDeliveries);
 
             IsBusy = false;
         }
@@ -193,7 +198,10 @@ namespace MilkWala.ViewModels
             if (delivery == null) return;
 
             await DbService.InitAsync();
-            delivery.DeliveredAt = DateTime.Now;
+
+            // Only a completed delivery has a delivery time; skipping must not stamp one.
+            if (delivery.Status == DeliveryStatus.Delivered)
+                delivery.DeliveredAt = DateTime.Now;
             delivery.UpdatedAt = DateTime.UtcNow;
 
             await DbService.UpdateAsync(delivery);
@@ -265,7 +273,7 @@ namespace MilkWala.ViewModels
         {
             await DbService.InitAsync();
             var todayDeliveries = await DbService.GetTodayDeliveriesAsync(DateTime.Today);
-            DistributedStock = (decimal)todayDeliveries.Where(d => d.Status == DeliveryStatus.Delivered || d.Status == DeliveryStatus.Extra).Sum(d => d.QuantityLitres);
+            DistributedStock = (decimal)DeliveryStats.Litres(todayDeliveries);
 
             var vendors = await DbService.GetAllAsync<Vendor>();
             var v = vendors.FirstOrDefault();
@@ -325,7 +333,13 @@ namespace MilkWala.ViewModels
         private decimal _totalExpenses;
 
         [ObservableProperty]
+        private decimal _totalProcurementCost;
+
+        [ObservableProperty]
         private decimal _netProfit;
+
+        [ObservableProperty]
+        private string _reportMonthLabel = string.Empty;
 
         [ObservableProperty]
         private double _totalLitresSold;
@@ -342,17 +356,22 @@ namespace MilkWala.ViewModels
             IsBusy = true;
             await DbService.InitAsync();
 
-            var deliveries = await DbService.GetAllAsync<Delivery>();
-            TotalSales = deliveries.Where(d => d.Status == DeliveryStatus.Delivered || d.Status == DeliveryStatus.Extra).Sum(d => d.TotalPrice);
-            TotalLitresSold = deliveries.Where(d => d.Status == DeliveryStatus.Delivered || d.Status == DeliveryStatus.Extra).Sum(d => d.QuantityLitres);
+            var month = DateTime.Today;
+            ReportMonthLabel = $"Business Summary - {month:MMMM yyyy}";
 
+            var monthStart = new DateTime(month.Year, month.Month, 1);
+            var deliveries = await DbService.GetDeliveriesBetweenAsync(monthStart, monthStart.AddMonths(1));
             var payments = await DbService.GetAllAsync<Payment>();
-            TotalCollection = payments.Sum(p => p.Amount);
-
             var expenses = await DbService.GetAllAsync<Expense>();
-            TotalExpenses = expenses.Sum(e => e.Amount);
+            var procurements = await DbService.GetAllAsync<MilkProcurement>();
 
-            NetProfit = TotalSales - TotalExpenses;
+            var report = MonthlyReportCalculator.Calculate(month, deliveries, payments, expenses, procurements);
+            TotalSales = report.TotalSales;
+            TotalLitresSold = report.TotalLitresSold;
+            TotalCollection = report.TotalCollection;
+            TotalExpenses = report.TotalExpenses;
+            TotalProcurementCost = report.TotalProcurementCost;
+            NetProfit = report.NetProfit;
             IsBusy = false;
         }
     }

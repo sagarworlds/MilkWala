@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
+using MilkWala.Helpers;
 using MilkWala.Models;
 
 namespace MilkWala.Converters
@@ -80,6 +81,41 @@ namespace MilkWala.Converters
         public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// Maps a bool to text. ConverterParameter is "TextWhenTrue|TextWhenFalse", e.g. "Active|Inactive".
+    /// </summary>
+    public class BoolToTextConverter : IValueConverter
+    {
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            return BoolSwitch.Pick(value is true, parameter as string, fallback: value is true ? "True" : "False");
+        }
+
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            throw new NotSupportedException();
+        }
+    }
+
+    /// <summary>
+    /// Maps a bool to a colour. ConverterParameter is "ColorWhenTrue|ColorWhenFalse" as hex, e.g. "#10B981|#EF4444".
+    /// Falls back to cool gray when the parameter is missing, so a mistake is visible but never crashes the page.
+    /// </summary>
+    public class BoolToColorConverter : IValueConverter
+    {
+        private const string FallbackColor = "#6B7280";
+
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            return Color.FromArgb(BoolSwitch.Pick(value is true, parameter as string, FallbackColor));
+        }
+
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            throw new NotSupportedException();
         }
     }
 }

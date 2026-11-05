@@ -46,7 +46,14 @@
                                     </Grid>
 
                                     <Grid ColumnDefinitions="*, Auto">
-                                        <Label Grid.Column="0" Text="{Binding MilkType, StringFormat='{0} Milk: {1} Litres', Source={RelativeSource Self}}" FontSize="13" TextColor="#0EA5E9" FontAttributes="Bold"/>
+                                        <Label Grid.Column="0" FontSize="13" TextColor="#0EA5E9" FontAttributes="Bold">
+                                            <Label.Text>
+                                                <MultiBinding StringFormat="{}{0} Milk: {1} Litres">
+                                                    <Binding Path="MilkType"/>
+                                                    <Binding Path="QuantityLitres"/>
+                                                </MultiBinding>
+                                            </Label.Text>
+                                        </Label>
                                         <Label Grid.Column="1" Text="1-Tap Mark" FontSize="11" TextColor="#94A3B8"/>
                                     </Grid>
 

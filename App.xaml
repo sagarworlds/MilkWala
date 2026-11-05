@@ -9,6 +9,8 @@
             <converters:CurrencyFormatConverter x:Key="CurrencyFormatConverter" />
             <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
             <converters:StringHasTextConverter x:Key="StringHasTextConverter" />
+            <converters:BoolToTextConverter x:Key="BoolToTextConverter" />
+            <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
 
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
