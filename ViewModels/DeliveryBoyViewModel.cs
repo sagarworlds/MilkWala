@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using MilkWala.Models;
 using MilkWala.Services;
 
@@ -26,8 +27,12 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private string _statusMessage = string.Empty;
 
-        public DeliveryBoyViewModel(LocalDbService dbService, SyncEngineService syncEngine, LocalizationService localization)
-            : base(dbService, syncEngine, localization)
+        public DeliveryBoyViewModel(
+                LocalDbService dbService,
+                SyncEngineService syncEngine,
+                LocalizationService localization,
+                ILoggerFactory loggerFactory)
+            : base(dbService, syncEngine, localization, loggerFactory)
         {
             Title = "Delivery Staff Module";
         }
@@ -35,51 +40,55 @@ namespace MilkWala.ViewModels
         [RelayCommand]
         public async Task LoadRouteDeliveriesAsync()
         {
-            IsBusy = true;
-            await DbService.InitAsync();
-
-            var deliveries = await DbService.GetTodayDeliveriesAsync(DateTime.Today);
-            RouteDeliveries.Clear();
-            foreach (var d in deliveries)
+            await RunSafeAsync(async () =>
             {
-                RouteDeliveries.Add(d);
-            }
+                await DbService.InitAsync();
 
-            CompletedDeliveries = deliveries.Count(d => d.Status == DeliveryStatus.Delivered || d.Status == DeliveryStatus.Skipped || d.Status == DeliveryStatus.Extra);
-            TotalPendingDeliveries = deliveries.Count(d => d.Status == DeliveryStatus.Pending);
+                var deliveries = await DbService.GetTodayDeliveriesAsync(DateTime.Today);
+                RouteDeliveries.Clear();
+                foreach (var d in deliveries)
+                {
+                    RouteDeliveries.Add(d);
+                }
 
-            IsBusy = false;
+                CompletedDeliveries = deliveries.Count(d => d.Status == DeliveryStatus.Delivered || d.Status == DeliveryStatus.Skipped || d.Status == DeliveryStatus.Extra);
+                TotalPendingDeliveries = deliveries.Count(d => d.Status == DeliveryStatus.Pending);
+            });
         }
 
         [RelayCommand]
         public async Task MarkDeliveredAsync(Delivery delivery)
         {
-            if (delivery == null) return;
+            await RunSafeAsync(async () =>
+            {
+                if (delivery == null) return;
 
-            delivery.Status = DeliveryStatus.Delivered;
-            delivery.DeliveredAt = DateTime.Now;
-            delivery.UpdatedAt = DateTime.UtcNow;
+                delivery.Status = DeliveryStatus.Delivered;
+                delivery.DeliveredAt = DateTime.Now;
+                delivery.UpdatedAt = DateTime.UtcNow;
 
-            await DbService.UpdateAsync(delivery);
-            await DbService.EnqueueSyncAsync("Deliveries", delivery.Id, SyncOperation.Update, delivery);
+                await DbService.UpdateWithSyncAsync(delivery);
 
-            StatusMessage = $"Marked delivered for {delivery.CustomerName} ({delivery.QuantityLitres}L)";
-            await LoadRouteDeliveriesAsync();
+                StatusMessage = $"Marked delivered for {delivery.CustomerName} ({delivery.QuantityLitres}L)";
+                await LoadRouteDeliveriesAsync();
+            });
         }
 
         [RelayCommand]
         public async Task MarkSkippedAsync(Delivery delivery)
         {
-            if (delivery == null) return;
+            await RunSafeAsync(async () =>
+            {
+                if (delivery == null) return;
 
-            delivery.Status = DeliveryStatus.Skipped;
-            delivery.UpdatedAt = DateTime.UtcNow;
+                delivery.Status = DeliveryStatus.Skipped;
+                delivery.UpdatedAt = DateTime.UtcNow;
 
-            await DbService.UpdateAsync(delivery);
-            await DbService.EnqueueSyncAsync("Deliveries", delivery.Id, SyncOperation.Update, delivery);
+                await DbService.UpdateWithSyncAsync(delivery);
 
-            StatusMessage = $"Marked skipped for {delivery.CustomerName}";
-            await LoadRouteDeliveriesAsync();
+                StatusMessage = $"Marked skipped for {delivery.CustomerName}";
+                await LoadRouteDeliveriesAsync();
+            });
         }
     }
 }

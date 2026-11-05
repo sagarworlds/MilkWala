@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using MilkWala.Services;
+using MilkWala.Services.Identity;
 using MilkWala.ViewModels;
 using MilkWala.Views;
 using MilkWala.Views.Customer;
@@ -33,6 +34,8 @@ namespace MilkWala
             builder.Services.AddSingleton<DemandForecastService>();
             builder.Services.AddSingleton<BackupService>();
             builder.Services.AddSingleton<MockDataSeeder>();
+            builder.Services.AddSingleton<IPreferences>(Preferences.Default);
+            builder.Services.AddSingleton<ICurrentUserService, CurrentUserService>();
 
             // 2. ViewModels
             builder.Services.AddTransient<AuthViewModel>();

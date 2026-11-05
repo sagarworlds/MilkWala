@@ -4,13 +4,16 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using MilkWala.Models;
 using MilkWala.Services;
+using MilkWala.Services.Data;
+using MilkWala.Services.Identity;
 using MilkWala.Services.Reporting;
 
 namespace MilkWala.ViewModels
 {
-    public partial class CustomerDashboardViewModel : BaseViewModel
+    public partial class CustomerDashboardViewModel : CustomerViewModelBase
     {
         [ObservableProperty]
         private Customer? _currentCustomer;
@@ -36,8 +39,13 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private ObservableCollection<Delivery> _recentDeliveries = new();
 
-        public CustomerDashboardViewModel(LocalDbService dbService, SyncEngineService syncEngine, LocalizationService localization)
-            : base(dbService, syncEngine, localization)
+        public CustomerDashboardViewModel(
+                LocalDbService dbService,
+                SyncEngineService syncEngine,
+                LocalizationService localization,
+                ILoggerFactory loggerFactory,
+                ICurrentUserService currentUser)
+            : base(dbService, syncEngine, localization, loggerFactory, currentUser)
         {
             Title = "Customer Dashboard";
         }
@@ -45,40 +53,40 @@ namespace MilkWala.ViewModels
         [RelayCommand]
         public async Task LoadDashboardDataAsync()
         {
-            IsBusy = true;
-            await DbService.InitAsync();
-
-            CurrentCustomer = await DbService.GetCustomerByUserIdAsync(1) ?? (await DbService.GetAllAsync<Customer>()).FirstOrDefault();
-
-            if (CurrentCustomer != null)
+            await RunSafeAsync(async () =>
             {
-                WalletBalance = CurrentCustomer.WalletBalance;
-                PendingDues = CurrentCustomer.OutstandingBalance;
+                await DbService.InitAsync();
 
-                var monthDeliveries = await DbService.GetCustomerDeliveriesAsync(CurrentCustomer.Id, DateTime.Today);
-                TodaysDelivery = monthDeliveries.FirstOrDefault(d => d.DeliveryDate.Date == DateTime.Today);
+                CurrentCustomer = await RequireCustomerAsync();
 
-                // Always reassign so a previous customer's / day's status never lingers when there is no delivery today.
-                TodaysDeliveryStatusText = TodaysDelivery != null
-                    ? $"{TodaysDelivery.QuantityLitres}L {TodaysDelivery.MilkType} - {TodaysDelivery.Status}"
-                    : "No delivery scheduled today";
-
-                MonthlyLitresDelivered = DeliveryStats.Litres(monthDeliveries);
-                MonthlyTotalAmount = DeliveryStats.Revenue(monthDeliveries);
-
-                // The month list is sorted oldest-first, so take the newest explicitly.
-                RecentDeliveries.Clear();
-                foreach (var del in DeliveryStats.MostRecent(monthDeliveries, 7))
+                if (CurrentCustomer != null)
                 {
-                    RecentDeliveries.Add(del);
-                }
-            }
+                    WalletBalance = CurrentCustomer.WalletBalance;
+                    PendingDues = CurrentCustomer.OutstandingBalance;
 
-            IsBusy = false;
+                    var monthDeliveries = await DbService.GetCustomerDeliveriesAsync(CurrentCustomer.Id, DateTime.Today);
+                    TodaysDelivery = monthDeliveries.FirstOrDefault(d => d.DeliveryDate.Date == DateTime.Today);
+
+                    // Always reassign so a previous customer's / day's status never lingers when there is no delivery today.
+                    TodaysDeliveryStatusText = TodaysDelivery != null
+                        ? $"{TodaysDelivery.QuantityLitres}L {TodaysDelivery.MilkType} - {TodaysDelivery.Status}"
+                        : "No delivery scheduled today";
+
+                    MonthlyLitresDelivered = DeliveryStats.Litres(monthDeliveries);
+                    MonthlyTotalAmount = DeliveryStats.Revenue(monthDeliveries);
+
+                    // The month list is sorted oldest-first, so take the newest explicitly.
+                    RecentDeliveries.Clear();
+                    foreach (var del in DeliveryStats.MostRecent(monthDeliveries, 7))
+                    {
+                        RecentDeliveries.Add(del);
+                    }
+                }
+            });
         }
     }
 
-    public partial class CustomerSubscriptionViewModel : BaseViewModel
+    public partial class CustomerSubscriptionViewModel : CustomerViewModelBase
     {
         [ObservableProperty]
         private Subscription? _currentSubscription;
@@ -106,8 +114,13 @@ namespace MilkWala.ViewModels
             MilkType.Cow, MilkType.Buffalo, MilkType.Toned, MilkType.FullCream, MilkType.Organic
         };
 
-        public CustomerSubscriptionViewModel(LocalDbService dbService, SyncEngineService syncEngine, LocalizationService localization)
-            : base(dbService, syncEngine, localization)
+        public CustomerSubscriptionViewModel(
+                LocalDbService dbService,
+                SyncEngineService syncEngine,
+                LocalizationService localization,
+                ILoggerFactory loggerFactory,
+                ICurrentUserService currentUser)
+            : base(dbService, syncEngine, localization, loggerFactory, currentUser)
         {
             Title = "Manage Subscription";
         }
@@ -115,70 +128,96 @@ namespace MilkWala.ViewModels
         [RelayCommand]
         public async Task LoadSubscriptionAsync()
         {
-            await DbService.InitAsync();
-            var subs = await DbService.GetAllAsync<Subscription>();
-            CurrentSubscription = subs.FirstOrDefault();
-
-            if (CurrentSubscription != null)
+            await RunSafeAsync(async () =>
             {
-                SelectedMilkType = CurrentSubscription.MilkType;
-                QuantityLitres = CurrentSubscription.QuantityLitres;
-                IsPaused = CurrentSubscription.IsPaused;
-            }
+                await DbService.InitAsync();
+                var customer = await RequireCustomerAsync();
+                if (customer == null) return;
+
+                var subs = await DbService.GetAllAsync<Subscription>();
+                CurrentSubscription = subs.FirstOrDefault(s => s.CustomerId == customer.Id);
+                if (CurrentSubscription == null)
+                    StatusMessage = "You do not have an active subscription yet. Please contact your vendor.";
+
+                if (CurrentSubscription != null)
+                {
+                    SelectedMilkType = CurrentSubscription.MilkType;
+                    QuantityLitres = CurrentSubscription.QuantityLitres;
+                    IsPaused = CurrentSubscription.IsPaused;
+                }
+            });
         }
 
         [RelayCommand]
         public async Task SaveSubscriptionAsync()
         {
-            if (CurrentSubscription == null) return;
+            await RunSafeAsync(async () =>
+            {
+                if (CurrentSubscription == null)
+                {
+                    ErrorMessage = "No active subscription was found to update.";
+                    return;
+                }
 
-            CurrentSubscription.MilkType = SelectedMilkType;
-            CurrentSubscription.QuantityLitres = QuantityLitres;
-            CurrentSubscription.IsPaused = IsPaused;
-            CurrentSubscription.UpdatedAt = DateTime.UtcNow;
+                CurrentSubscription.MilkType = SelectedMilkType;
+                CurrentSubscription.QuantityLitres = QuantityLitres;
+                CurrentSubscription.IsPaused = IsPaused;
+                CurrentSubscription.UpdatedAt = DateTime.UtcNow;
 
-            await DbService.UpdateAsync(CurrentSubscription);
-            await DbService.EnqueueSyncAsync("Subscriptions", CurrentSubscription.Id, SyncOperation.Update, CurrentSubscription);
+                await DbService.UpdateWithSyncAsync(CurrentSubscription);
 
-            StatusMessage = "Subscription details saved successfully!";
+                StatusMessage = "Subscription details saved successfully!";
+            });
         }
 
         [RelayCommand]
         public async Task ApplyVacationHoldAsync()
         {
-            if (CurrentSubscription == null) return;
+            await RunSafeAsync(async () =>
+            {
+                if (CurrentSubscription == null)
+                {
+                    ErrorMessage = "No active subscription was found to update.";
+                    return;
+                }
 
-            CurrentSubscription.IsPaused = true;
-            CurrentSubscription.PauseStartDate = VacationStartDate;
-            CurrentSubscription.PauseEndDate = VacationEndDate;
-            CurrentSubscription.UpdatedAt = DateTime.UtcNow;
+                CurrentSubscription.IsPaused = true;
+                CurrentSubscription.PauseStartDate = VacationStartDate;
+                CurrentSubscription.PauseEndDate = VacationEndDate;
+                CurrentSubscription.UpdatedAt = DateTime.UtcNow;
 
-            await DbService.UpdateAsync(CurrentSubscription);
-            await DbService.EnqueueSyncAsync("Subscriptions", CurrentSubscription.Id, SyncOperation.Update, CurrentSubscription);
+                await DbService.UpdateWithSyncAsync(CurrentSubscription);
 
-            IsPaused = true;
-            StatusMessage = $"Vacation hold applied from {VacationStartDate:dd MMM} to {VacationEndDate:dd MMM}.";
+                IsPaused = true;
+                StatusMessage = $"Vacation hold applied from {VacationStartDate:dd MMM} to {VacationEndDate:dd MMM}.";
+            });
         }
 
         [RelayCommand]
         public async Task ResumeDeliveryAsync()
         {
-            if (CurrentSubscription == null) return;
+            await RunSafeAsync(async () =>
+            {
+                if (CurrentSubscription == null)
+                {
+                    ErrorMessage = "No active subscription was found to update.";
+                    return;
+                }
 
-            CurrentSubscription.IsPaused = false;
-            CurrentSubscription.PauseStartDate = null;
-            CurrentSubscription.PauseEndDate = null;
-            CurrentSubscription.UpdatedAt = DateTime.UtcNow;
+                CurrentSubscription.IsPaused = false;
+                CurrentSubscription.PauseStartDate = null;
+                CurrentSubscription.PauseEndDate = null;
+                CurrentSubscription.UpdatedAt = DateTime.UtcNow;
 
-            await DbService.UpdateAsync(CurrentSubscription);
-            await DbService.EnqueueSyncAsync("Subscriptions", CurrentSubscription.Id, SyncOperation.Update, CurrentSubscription);
+                await DbService.UpdateWithSyncAsync(CurrentSubscription);
 
-            IsPaused = false;
-            StatusMessage = "Subscription resumed! Daily delivery is active.";
+                IsPaused = false;
+                StatusMessage = "Subscription resumed! Daily delivery is active.";
+            });
         }
     }
 
-    public partial class CustomerCalendarViewModel : BaseViewModel
+    public partial class CustomerCalendarViewModel : CustomerViewModelBase
     {
         [ObservableProperty]
         private DateTime _selectedMonth = DateTime.Today;
@@ -195,8 +234,13 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private double _totalLitres;
 
-        public CustomerCalendarViewModel(LocalDbService dbService, SyncEngineService syncEngine, LocalizationService localization)
-            : base(dbService, syncEngine, localization)
+        public CustomerCalendarViewModel(
+                LocalDbService dbService,
+                SyncEngineService syncEngine,
+                LocalizationService localization,
+                ILoggerFactory loggerFactory,
+                ICurrentUserService currentUser)
+            : base(dbService, syncEngine, localization, loggerFactory, currentUser)
         {
             Title = "Delivery Calendar";
         }
@@ -204,39 +248,48 @@ namespace MilkWala.ViewModels
         [RelayCommand]
         public async Task LoadCalendarAsync()
         {
-            IsBusy = true;
-            await DbService.InitAsync();
-
-            var list = await DbService.GetCustomerDeliveriesAsync(1, SelectedMonth);
-            CalendarDeliveries.Clear();
-            foreach (var d in list)
+            await RunSafeAsync(async () =>
             {
-                CalendarDeliveries.Add(d);
-            }
+                await DbService.InitAsync();
 
-            TotalDeliveredDays = list.Count(d => DeliveryStats.IsFulfilled(d.Status));
-            TotalSkippedDays = list.Count(d => d.Status == DeliveryStatus.Skipped || d.Status == DeliveryStatus.Holiday);
-            TotalLitres = DeliveryStats.Litres(list);
+                var customer = await RequireCustomerAsync();
+                if (customer == null) return;
 
-            IsBusy = false;
+                var list = await DbService.GetCustomerDeliveriesAsync(customer.Id, SelectedMonth);
+                CalendarDeliveries.Clear();
+                foreach (var d in list)
+                {
+                    CalendarDeliveries.Add(d);
+                }
+
+                TotalDeliveredDays = list.Count(d => DeliveryStats.IsFulfilled(d.Status));
+                TotalSkippedDays = list.Count(d => d.Status == DeliveryStatus.Skipped || d.Status == DeliveryStatus.Holiday);
+                TotalLitres = DeliveryStats.Litres(list);
+            });
         }
 
         [RelayCommand]
         public async Task PreviousMonthAsync()
         {
-            SelectedMonth = SelectedMonth.AddMonths(-1);
-            await LoadCalendarAsync();
+            await RunSafeAsync(async () =>
+            {
+                SelectedMonth = SelectedMonth.AddMonths(-1);
+                await LoadCalendarAsync();
+            });
         }
 
         [RelayCommand]
         public async Task NextMonthAsync()
         {
-            SelectedMonth = SelectedMonth.AddMonths(1);
-            await LoadCalendarAsync();
+            await RunSafeAsync(async () =>
+            {
+                SelectedMonth = SelectedMonth.AddMonths(1);
+                await LoadCalendarAsync();
+            });
         }
     }
 
-    public partial class CustomerWalletViewModel : BaseViewModel
+    public partial class CustomerWalletViewModel : CustomerViewModelBase
     {
         [ObservableProperty]
         private decimal _balance;
@@ -250,8 +303,13 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private string _statusMessage = string.Empty;
 
-        public CustomerWalletViewModel(LocalDbService dbService, SyncEngineService syncEngine, LocalizationService localization)
-            : base(dbService, syncEngine, localization)
+        public CustomerWalletViewModel(
+                LocalDbService dbService,
+                SyncEngineService syncEngine,
+                LocalizationService localization,
+                ILoggerFactory loggerFactory,
+                ICurrentUserService currentUser)
+            : base(dbService, syncEngine, localization, loggerFactory, currentUser)
         {
             Title = "Wallet & Payments";
         }
@@ -259,56 +317,52 @@ namespace MilkWala.ViewModels
         [RelayCommand]
         public async Task LoadWalletAsync()
         {
-            await DbService.InitAsync();
-            var customer = await DbService.GetCustomerByUserIdAsync(1);
-            if (customer != null)
+            await RunSafeAsync(async () =>
             {
-                Balance = customer.WalletBalance;
-            }
+                await DbService.InitAsync();
+                var customer = await RequireCustomerAsync();
+                if (customer == null) return;
 
-            var txs = await DbService.GetAllAsync<WalletTransaction>();
-            Transactions.Clear();
-            foreach (var tx in txs.Where(t => t.CustomerId == 1).OrderByDescending(t => t.Date))
-            {
-                Transactions.Add(tx);
-            }
+                Balance = customer.WalletBalance;
+
+                var txs = await DbService.GetAllAsync<WalletTransaction>();
+                Transactions.Clear();
+                foreach (var tx in txs.Where(t => t.CustomerId == customer.Id).OrderByDescending(t => t.Date))
+                {
+                    Transactions.Add(tx);
+                }
+            });
         }
 
         [RelayCommand]
         public async Task AddMoneyAsync()
         {
-            if (RechargeAmount <= 0) return;
-
-            IsBusy = true;
-            await DbService.InitAsync();
-
-            var customer = await DbService.GetCustomerByUserIdAsync(1);
-            if (customer != null)
+            await RunSafeAsync(async () =>
             {
-                customer.WalletBalance += RechargeAmount;
-                await DbService.UpdateAsync(customer);
-                Balance = customer.WalletBalance;
+                if (RechargeAmount <= 0) return;
 
-                var tx = new WalletTransaction
+                await DbService.InitAsync();
+
+                var customer = await RequireCustomerAsync();
+                if (customer == null) return;
+
+                var amount = RechargeAmount;
+                var description = $"Online Recharge via UPI (Ref: TXN{Random.Shared.Next(1000, 9999)})";
+
+                WalletTransaction? tx = null;
+                await DbService.RunInTransactionAsync(connection =>
                 {
-                    CustomerId = 1,
-                    Amount = RechargeAmount,
-                    TransactionType = "Credit",
-                    Description = $"Online Recharge via UPI (Ref: TXN{Random.Shared.Next(1000, 9999)})",
-                    Date = DateTime.Now,
-                    BalanceAfter = Balance
-                };
-                await DbService.InsertAsync(tx);
-                await DbService.EnqueueSyncAsync("WalletTransactions", tx.Id, SyncOperation.Insert, tx);
+                    tx = WalletLedger.Credit(connection, customer.Id, amount, description);
+                });
 
+                Balance = tx!.BalanceAfter;
                 Transactions.Insert(0, tx);
-                StatusMessage = $"₹{RechargeAmount} added to wallet successfully!";
-            }
-            IsBusy = false;
+                StatusMessage = $"₹{amount} added to wallet successfully!";
+            });
         }
     }
 
-    public partial class CustomerComplaintsViewModel : BaseViewModel
+    public partial class CustomerComplaintsViewModel : CustomerViewModelBase
     {
         [ObservableProperty]
         private ComplaintCategory _selectedCategory = ComplaintCategory.Quality;
@@ -334,8 +388,13 @@ namespace MilkWala.ViewModels
             ComplaintCategory.GeneralFeedback
         };
 
-        public CustomerComplaintsViewModel(LocalDbService dbService, SyncEngineService syncEngine, LocalizationService localization)
-            : base(dbService, syncEngine, localization)
+        public CustomerComplaintsViewModel(
+                LocalDbService dbService,
+                SyncEngineService syncEngine,
+                LocalizationService localization,
+                ILoggerFactory loggerFactory,
+                ICurrentUserService currentUser)
+            : base(dbService, syncEngine, localization, loggerFactory, currentUser)
         {
             Title = "Complaints & Support";
         }
@@ -343,45 +402,54 @@ namespace MilkWala.ViewModels
         [RelayCommand]
         public async Task LoadComplaintsAsync()
         {
-            await DbService.InitAsync();
-            var list = await DbService.GetAllAsync<Complaint>();
-            Complaints.Clear();
-            foreach (var c in list.Where(x => x.CustomerId == 1).OrderByDescending(x => x.CreatedAt))
+            await RunSafeAsync(async () =>
             {
-                Complaints.Add(c);
-            }
+                await DbService.InitAsync();
+                var list = await DbService.GetAllAsync<Complaint>();
+                Complaints.Clear();
+                var customer = await RequireCustomerAsync();
+                if (customer == null) return;
+
+                foreach (var c in list.Where(x => x.CustomerId == customer.Id).OrderByDescending(x => x.CreatedAt))
+                {
+                    Complaints.Add(c);
+                }
+            });
         }
 
         [RelayCommand]
         public async Task SubmitComplaintAsync()
         {
-            if (string.IsNullOrWhiteSpace(Subject) || string.IsNullOrWhiteSpace(Description))
+            await RunSafeAsync(async () =>
             {
-                StatusMessage = "Please enter subject and description.";
-                return;
-            }
+                if (string.IsNullOrWhiteSpace(Subject) || string.IsNullOrWhiteSpace(Description))
+                {
+                    StatusMessage = "Please enter subject and description.";
+                    return;
+                }
 
-            IsBusy = true;
-            var complaint = new Complaint
-            {
-                CustomerId = 1,
-                CustomerName = "Rahul Sharma",
-                Category = SelectedCategory,
-                Subject = Subject,
-                Description = Description,
-                Status = ComplaintStatus.Open,
-                CreatedAt = DateTime.UtcNow
-            };
+                var customer = await RequireCustomerAsync();
+                if (customer == null) return;
 
-            await DbService.InsertAsync(complaint);
-            await DbService.EnqueueSyncAsync("Complaints", complaint.Id, SyncOperation.Insert, complaint);
+                var complaint = new Complaint
+                {
+                    CustomerId = customer.Id,
+                    CustomerName = customer.Name,
+                    Category = SelectedCategory,
+                    Subject = Subject,
+                    Description = Description,
+                    Status = ComplaintStatus.Open,
+                    CreatedAt = DateTime.Now
+                };
 
-            Subject = string.Empty;
-            Description = string.Empty;
-            StatusMessage = "Complaint registered! Reference ID #" + complaint.Id;
+                await DbService.InsertWithSyncAsync(complaint);
 
-            await LoadComplaintsAsync();
-            IsBusy = false;
+                Subject = string.Empty;
+                Description = string.Empty;
+                StatusMessage = "Complaint registered! Reference ID #" + complaint.Id;
+
+                await LoadComplaintsAsync();
+            });
         }
     }
 }
