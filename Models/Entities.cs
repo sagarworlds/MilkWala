@@ -112,6 +112,10 @@ namespace MilkWala.Models
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
         public string ProofPhotoUrl { get; set; } = string.Empty;
+        /// <summary>Part of this delivery's price taken from the customer's wallet when it was billed.</summary>
+        public decimal AmountChargedToWallet { get; set; }
+        /// <summary>Part of this delivery's price added to the customer's outstanding dues when it was billed.</summary>
+        public decimal AmountAddedToDues { get; set; }
         public DateTime DeliveredAt { get; set; }
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }

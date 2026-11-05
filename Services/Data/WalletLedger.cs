@@ -29,6 +29,66 @@ namespace MilkWala.Services.Data
             return Apply(connection, customerId, -amount, description);
         }
 
+        /// <summary>Outcome of a wallet recharge.</summary>
+        /// <param name="Credit">The wallet credit for the money paid in.</param>
+        /// <param name="Payment">The collection record the vendor sees in "today's collection".</param>
+        /// <param name="DuesCleared">Outstanding dues paid off from the new balance (0 if none).</param>
+        /// <param name="BalanceAfter">Wallet balance once dues were cleared.</param>
+        public sealed record RechargeResult(WalletTransaction Credit, Payment Payment, decimal DuesCleared, decimal BalanceAfter);
+
+        /// <summary>
+        /// Customer pays money in: credits the wallet, records the payment as a collection, then uses the balance to
+        /// pay off any outstanding dues (oldest obligation first) so the customer is not left owing while holding credit.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="amount"/> is not positive.</exception>
+        /// <exception cref="RecordNotFoundException">The customer does not exist.</exception>
+        public static RechargeResult Recharge(
+            SQLiteConnection connection,
+            int customerId,
+            decimal amount,
+            PaymentMode mode,
+            string reference,
+            string description)
+        {
+            var credit = Credit(connection, customerId, amount, description);
+
+            var payment = new Payment
+            {
+                CustomerId = customerId,
+                Amount = amount,
+                Mode = mode,
+                ReferenceNumber = reference,
+                PaymentDate = DateTime.Now,
+                Remarks = "Wallet recharge",
+                IsVerified = true
+            };
+            connection.Insert(payment);
+            SyncQueueWriter.Enqueue(connection, payment, SyncOperation.Insert);
+
+            var customer = connection.Find<Customer>(customerId)!;
+            decimal cleared = Math.Min(customer.OutstandingBalance, customer.WalletBalance);
+            if (cleared > 0)
+            {
+                Debit(connection, customerId, cleared, "Outstanding dues cleared from wallet");
+                AdjustOutstanding(connection, customerId, -cleared);
+            }
+
+            decimal balanceAfter = connection.Find<Customer>(customerId)!.WalletBalance;
+            return new RechargeResult(credit, payment, cleared, balanceAfter);
+        }
+
+        /// <summary>Raises (positive) or lowers (negative) the customer's outstanding dues and queues the change for sync.</summary>
+        internal static void AdjustOutstanding(SQLiteConnection connection, int customerId, decimal delta)
+        {
+            var customer = connection.Find<Customer>(customerId)
+                ?? throw new RecordNotFoundException(nameof(Customer), customerId);
+
+            customer.OutstandingBalance += delta;
+            customer.UpdatedAt = DateTime.UtcNow;
+            connection.Update(customer);
+            SyncQueueWriter.Enqueue(connection, customer, SyncOperation.Update);
+        }
+
         private static WalletTransaction Apply(SQLiteConnection connection, int customerId, decimal signedAmount, string description)
         {
             var customer = connection.Find<Customer>(customerId)

@@ -126,6 +126,7 @@ CI runs these tests and an Android build of the app on every pull request.
 - **Dates:** business dates and timestamps users see or filter by (deliveries, payments, expenses, orders) are **local time**; sync/audit metadata (`UpdatedAt`, sync queue and log times) is **UTC**. A test enforces this.
 - **Signed-in user:** screens get the customer from `ICurrentUserService`; never hardcode an id.
 - **Multi-step writes:** use `LocalDbService.RunInTransactionAsync` (or `InsertWithSyncAsync` / `UpdateWithSyncAsync`) so a change and its sync-queue entry commit together. Wallet, store and procurement rules live in `Services/Data/*Ledger.cs`.
+- **Daily deliveries & billing:** each day's deliveries are generated from active subscriptions (vacation holds become `Holiday` rows; `Alternate` plans skip off days). Marking a delivery delivered charges the wallet first and puts any shortfall on the customer's dues; correcting it reverses the exact split; a recharge also pays off dues. Rules live in `Services/Scheduling` and `Services/Data/DeliveryLedger.cs`.
 - **View-model commands:** wrap the body in `RunSafeAsync` so failures are logged and shown in the header banner instead of leaving the screen busy.
 
 ---

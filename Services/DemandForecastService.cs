@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MilkWala.Models;
+using MilkWala.Services.Scheduling;
 
 namespace MilkWala.Services
 {
@@ -36,12 +37,13 @@ namespace MilkWala.Services
 
             foreach (MilkType milkType in Enum.GetValues(typeof(MilkType)))
             {
-                var typeSubs = subscriptions.Where(s => s.MilkType == milkType).ToList();
+                // Only plans that deliver tomorrow (e.g. not the off day of an alternate-day plan).
+                var typeSubs = subscriptions
+                    .Where(s => s.MilkType == milkType && SubscriptionRules.IsDueOn(s, targetDate))
+                    .ToList();
 
                 double totalSub = typeSubs.Sum(s => s.QuantityLitres);
-                double pausedSub = typeSubs.Where(s => s.IsPaused &&
-                    (s.PauseStartDate == null || s.PauseStartDate <= targetDate) &&
-                    (s.PauseEndDate == null || s.PauseEndDate >= targetDate)).Sum(s => s.QuantityLitres);
+                double pausedSub = typeSubs.Where(s => SubscriptionRules.IsPausedOn(s, targetDate)).Sum(s => s.QuantityLitres);
 
                 double extraOrders = specialOrders
                     .Where(o => o.MilkType == milkType && o.TargetDate.Date == targetDate.Date && o.IsApproved)

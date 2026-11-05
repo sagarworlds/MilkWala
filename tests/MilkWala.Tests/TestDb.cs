@@ -16,7 +16,29 @@ internal sealed class TestDb : IDisposable
         Connection.CreateTable<FarmerSupplier>();
         Connection.CreateTable<MilkProcurement>();
         Connection.CreateTable<SyncQueueItem>();
+        Connection.CreateTable<Subscription>();
+        Connection.CreateTable<Product>();
+        Connection.CreateTable<Delivery>();
+        Connection.CreateTable<Payment>();
     }
+
+    public Delivery AddDelivery(Customer customer, double litres, decimal rate, DeliveryStatus status = DeliveryStatus.Pending, DateTime? date = null)
+    {
+        var delivery = new Delivery
+        {
+            CustomerId = customer.Id,
+            CustomerName = customer.Name,
+            DeliveryDate = (date ?? DateTime.Today).Date,
+            MilkType = MilkType.Cow,
+            QuantityLitres = litres,
+            RatePerLitre = rate,
+            Status = status
+        };
+        Connection.Insert(delivery);
+        return delivery;
+    }
+
+    public Customer Reload(Customer customer) => Connection.Get<Customer>(customer.Id);
 
     public Customer AddCustomer(decimal walletBalance)
     {
