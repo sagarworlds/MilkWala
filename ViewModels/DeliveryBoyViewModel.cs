@@ -28,8 +28,6 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private ObservableCollection<Delivery> _routeDeliveries = new();
 
-        [ObservableProperty]
-        private string _statusMessage = string.Empty;
 
         public DeliveryBoyViewModel(
                 LocalDbService dbService,

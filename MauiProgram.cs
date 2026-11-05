@@ -53,6 +53,7 @@ namespace MilkWala
             builder.Services.AddTransient<VendorInventoryExpenseViewModel>();
             builder.Services.AddTransient<VendorProcurementViewModel>();
             builder.Services.AddTransient<VendorReportsViewModel>();
+            builder.Services.AddTransient<VendorComplaintsViewModel>();
             builder.Services.AddTransient<DeliveryBoyViewModel>();
 
             // 3. Views
@@ -69,6 +70,7 @@ namespace MilkWala
             builder.Services.AddTransient<InventoryExpensePage>();
             builder.Services.AddTransient<ProcurementPage>();
             builder.Services.AddTransient<VendorReportsPage>();
+            builder.Services.AddTransient<ComplaintManagementPage>();
             builder.Services.AddTransient<DeliveryBoyPage>();
 
             var app = builder.Build();

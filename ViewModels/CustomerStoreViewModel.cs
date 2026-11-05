@@ -20,8 +20,6 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private ObservableCollection<StoreOrder> _myStoreOrders = new();
 
-        [ObservableProperty]
-        private string _statusMessage = string.Empty;
 
         public CustomerStoreViewModel(
                 LocalDbService dbService,
@@ -81,7 +79,7 @@ namespace MilkWala.ViewModels
                 }
                 catch (InsufficientBalanceException)
                 {
-                    StatusMessage = $"Insufficient wallet balance for {product.Name}. Please recharge.";
+                    ErrorMessage = $"Insufficient wallet balance for {product.Name}. Please recharge.";
                     return;
                 }
 

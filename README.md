@@ -24,10 +24,11 @@
 
 ### 🚚 Milk Vendor Portal
 - **Control Center Hub**: Real-time business KPIs (Total Customers, Today's Deliveries, Collections, Outstanding Dues).
-- **Customer Directory**: Add, edit, activate, or deactivate customer profiles and assign route sequences.
+- **Customer Directory**: Add customers (with their daily milk subscription and route), activate or deactivate them. New customers start with an empty wallet and log in with their mobile number.
 - **Delivery Management**: Daily delivery checklist with 1-tap `Delivered` / `Skipped` marking and GPS/proof options.
-- **Farmer Procurement & Fat% Ledger**: Log raw milk purchases from farmers, test **Fat %** and **SNF %**, calculate rates automatically (`Base ₹35 + Fat% * ₹2.0`), and manage supplier payouts.
+- **Farmer Procurement & Fat% Ledger**: Log raw milk purchases from farmers, test **Fat %** and **SNF %**, calculate rates automatically (`Base ₹35 + Fat% * ₹2.0`), add farmers, and pay them (oldest purchases are settled first).
 - **Inventory & Expense Manager**: Track morning/evening stock balance against distributed milk, and record operational expenses (Fuel, Salary, Packaging, Maintenance).
+- **Complaint Desk**: See every customer complaint, start work, and close it with a written answer (or reopen it).
 - **Analytics & Financial Reports**: Total sales revenue, litres sold, cash/UPI collections, net profit metrics, and AI-powered demand forecasting.
 
 ### 🚴 Delivery Staff Module
@@ -127,6 +128,7 @@ CI runs these tests and an Android build of the app on every pull request.
 - **Signed-in user:** screens get the customer from `ICurrentUserService`; never hardcode an id.
 - **Multi-step writes:** use `LocalDbService.RunInTransactionAsync` (or `InsertWithSyncAsync` / `UpdateWithSyncAsync`) so a change and its sync-queue entry commit together. Wallet, store and procurement rules live in `Services/Data/*Ledger.cs`.
 - **Daily deliveries & billing:** each day's deliveries are generated from active subscriptions (vacation holds become `Holiday` rows; `Alternate` plans skip off days). Marking a delivery delivered charges the wallet first and puts any shortfall on the customer's dues; correcting it reverses the exact split; a recharge also pays off dues. Rules live in `Services/Scheduling` and `Services/Data/DeliveryLedger.cs`.
+- **Messages:** `StatusMessage` (outcome of an action) and `ErrorMessage` (rule broken / failure) live on `BaseViewModel` and are shown in the shared header on every page. Throw `BusinessRuleException` for a rule the user can fix; its text is shown as is.
 - **View-model commands:** wrap the body in `RunSafeAsync` so failures are logged and shown in the header banner instead of leaving the screen busy.
 
 ---

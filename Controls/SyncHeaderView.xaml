@@ -22,7 +22,12 @@
                                FontAttributes="Bold" />
                     </Border>
                 </HorizontalStackLayout>
-                <!-- Shared by every page: shows the last failure reported by a guarded command. -->
+                <!-- Shared by every page: the outcome of the last action, and the last failure of a guarded command. -->
+                <Label Text="{Binding StatusMessage}"
+                       FontSize="12"
+                       TextColor="#6EE7B7"
+                       Margin="0,6,0,0"
+                       IsVisible="{Binding StatusMessage, Converter={StaticResource StringHasTextConverter}}" />
                 <Label Text="{Binding ErrorMessage}"
                        FontSize="12"
                        TextColor="#FCA5A5"

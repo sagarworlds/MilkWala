@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:MilkWala.Controls"
+             x:Class="MilkWala.Views.Vendor.ComplaintManagementPage"
+             BackgroundColor="#F8FAFC"
+             Title="Customer Complaints">
+
+    <Grid RowDefinitions="Auto, *">
+        <controls:SyncHeaderView Grid.Row="0"/>
+
+        <ScrollView Grid.Row="1" Padding="16">
+            <VerticalStackLayout Spacing="16">
+
+                <Label Text="{Binding UnresolvedCount, StringFormat='{0} complaint(s) need attention'}"
+                       FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
+                <Label Text="Tap a complaint to respond to it." FontSize="12" TextColor="#64748B"/>
+
+                <CollectionView ItemsSource="{Binding Complaints}"
+                                SelectionMode="Single"
+                                SelectedItem="{Binding SelectedComplaint, Mode=TwoWay}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border StrokeShape="RoundRectangle 12" BackgroundColor="White" Stroke="#E2E8F0" Padding="12" Margin="0,4">
+                                <VerticalStackLayout Spacing="4">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <Label Grid.Column="0" Text="{Binding Subject}" FontSize="14" FontAttributes="Bold" TextColor="#0F172A"/>
+                                        <Border Grid.Column="1" StrokeShape="RoundRectangle 8" Padding="8,2"
+                                                BackgroundColor="{Binding Status, Converter={StaticResource ComplaintStatusToColorConverter}}">
+                                            <Label Text="{Binding Status}" FontSize="11" TextColor="White" FontAttributes="Bold"/>
+                                        </Border>
+                                    </Grid>
+                                    <Label FontSize="12" TextColor="#64748B">
+                                        <Label.Text>
+                                            <MultiBinding StringFormat="{}{0} • {1}">
+                                                <Binding Path="CustomerName"/>
+                                                <Binding Path="Category"/>
+                                            </MultiBinding>
+                                        </Label.Text>
+                                    </Label>
+                                    <Label Text="{Binding Description}" FontSize="12" TextColor="#475569"/>
+                                    <Label Text="{Binding CreatedAt, StringFormat='Raised on {0:dd MMM yyyy}'}" FontSize="11" TextColor="#94A3B8"/>
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Response panel for the selected complaint -->
+                <Border StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#0EA5E9" Padding="16"
+                        IsVisible="{Binding HasSelection}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Your response" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
+                        <Label Text="Write what was done. The customer sees this when the complaint is closed." FontSize="12" TextColor="#64748B"/>
+                        <Editor Text="{Binding ResolutionNotes}" Placeholder="e.g. Delivered the missing 0.5 L in the evening round."
+                                HeightRequest="90" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
+
+                        <Grid ColumnDefinitions="*, *" ColumnSpacing="8">
+                            <Button Grid.Column="0" Text="Start work" Command="{Binding StartWorkCommand}"
+                                    IsVisible="{Binding CanStartWork}"
+                                    BackgroundColor="#F59E0B" TextColor="White" CornerRadius="8" HeightRequest="44"/>
+                            <Button Grid.Column="1" Text="Close complaint" Command="{Binding CloseComplaintCommand}"
+                                    IsVisible="{Binding CanClose}"
+                                    BackgroundColor="#10B981" TextColor="White" CornerRadius="8" HeightRequest="44"/>
+                        </Grid>
+                        <Button Text="Reopen" Command="{Binding ReopenComplaintCommand}"
+                                IsVisible="{Binding CanReopen}"
+                                BackgroundColor="#6B7280" TextColor="White" CornerRadius="8" HeightRequest="44"/>
+                    </VerticalStackLayout>
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

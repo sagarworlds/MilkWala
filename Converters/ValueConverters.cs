@@ -33,6 +33,27 @@ namespace MilkWala.Converters
         }
     }
 
+    public class ComplaintStatusToColorConverter : IValueConverter
+    {
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            return value is ComplaintStatus status
+                ? status switch
+                {
+                    ComplaintStatus.Open => Color.FromArgb("#EF4444"),       // needs attention
+                    ComplaintStatus.InProgress => Color.FromArgb("#F59E0B"), // being handled
+                    ComplaintStatus.Closed => Color.FromArgb("#10B981"),     // resolved
+                    _ => Color.FromArgb("#6B7280")
+                }
+                : Color.FromArgb("#6B7280");
+        }
+
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            throw new NotSupportedException();
+        }
+    }
+
     public class CurrencyFormatConverter : IValueConverter
     {
         public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)

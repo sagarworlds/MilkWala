@@ -7,6 +7,7 @@
         <ResourceDictionary>
             <converters:StatusToColorConverter x:Key="StatusToColorConverter" />
             <converters:CurrencyFormatConverter x:Key="CurrencyFormatConverter" />
+            <converters:ComplaintStatusToColorConverter x:Key="ComplaintStatusToColorConverter" />
             <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
             <converters:StringHasTextConverter x:Key="StringHasTextConverter" />
             <converters:BoolToTextConverter x:Key="BoolToTextConverter" />

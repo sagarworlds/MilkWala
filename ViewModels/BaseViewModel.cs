@@ -34,6 +34,10 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private string _syncStatusText = "Online (Synced)";
 
+        /// <summary>Outcome of the last user action ("Delivered to Rahul. ₹93.00 charged to wallet."), shown in the shared header.</summary>
+        [ObservableProperty]
+        private string _statusMessage = string.Empty;
+
         /// <summary>Last failure from a guarded command, shown in the shared header banner. Empty when all is well.</summary>
         [ObservableProperty]
         private string _errorMessage = string.Empty;
@@ -83,11 +87,15 @@ namespace MilkWala.ViewModels
         /// <param name="operation">Filled in with the calling method's name; used to word the message.</param>
         protected async Task RunSafeAsync(Func<Task> work, [CallerMemberName] string operation = "")
         {
-            ErrorMessage = string.Empty;
-
+            // Only the outermost command clears the old messages; a command that calls another (e.g. mark delivered
+            // then reload the list) must not wipe the message it has just set.
             bool ownsBusyState = !IsBusy;
             if (ownsBusyState)
+            {
+                ErrorMessage = string.Empty;
+                StatusMessage = string.Empty;
                 IsBusy = true;
+            }
 
             try
             {

@@ -48,6 +48,39 @@
                     </VerticalStackLayout>
                 </Border>
 
+                <!-- Pay the selected farmer -->
+                <Border StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Pay Farmer" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
+                        <Label Text="{Binding SelectedSupplierOutstanding, Converter={StaticResource CurrencyFormatConverter}, StringFormat='Owed to the selected farmer: {0}'}"
+                               FontSize="13" TextColor="#EF4444" FontAttributes="Bold"/>
+                        <Label Text="Amount to pay now (oldest purchases are settled first)" FontSize="11" TextColor="#64748B"/>
+                        <Entry Text="{Binding PayoutAmount}" Keyboard="Numeric" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
+                        <Button Text="Record Payment" Command="{Binding PaySupplierCommand}" BackgroundColor="#0EA5E9" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Register a new farmer -->
+                <Border StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Add Farmer / Supplier" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
+                        <Entry Text="{Binding NewSupplierName}" Placeholder="Farmer or farm name" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
+                        <Entry Text="{Binding NewSupplierMobile}" Placeholder="Mobile Number" Keyboard="Telephone" MaxLength="10" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
+                        <Picker ItemsSource="{Binding AvailableMilkTypes}" SelectedItem="{Binding NewSupplierMilkType}" BackgroundColor="#F1F5F9" TextColor="#0F172A"/>
+                        <Grid ColumnDefinitions="*, *" ColumnSpacing="8">
+                            <VerticalStackLayout Grid.Column="0">
+                                <Label Text="Usual Fat %" FontSize="11" TextColor="#64748B"/>
+                                <Entry Text="{Binding NewSupplierFatPercent}" Keyboard="Numeric" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1">
+                                <Label Text="Usual rate / litre" FontSize="11" TextColor="#64748B"/>
+                                <Entry Text="{Binding NewSupplierRate}" Keyboard="Numeric" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
+                            </VerticalStackLayout>
+                        </Grid>
+                        <Button Text="Add Farmer" Command="{Binding AddSupplierCommand}" BackgroundColor="#10B981" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
+                    </VerticalStackLayout>
+                </Border>
+
                 <!-- Purchase History Ledger -->
                 <Label Text="Procurement History Ledger" FontSize="16" FontAttributes="Bold" TextColor="#1E293B" Margin="0,8,0,0"/>
 
@@ -72,6 +105,9 @@
                                     <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
                                         <Label Text="{Binding Litres, StringFormat='{0} Litres'}" FontSize="14" FontAttributes="Bold" TextColor="#0EA5E9" HorizontalOptions="End"/>
                                         <Label Text="{Binding TotalAmount, Converter={StaticResource CurrencyFormatConverter}}" FontSize="13" FontAttributes="Bold" TextColor="#10B981" HorizontalOptions="End"/>
+                                        <Label Text="{Binding IsPaid, Converter={StaticResource BoolToTextConverter}, ConverterParameter='Paid|Payment due'}"
+                                               TextColor="{Binding IsPaid, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#10B981|#F59E0B'}"
+                                               FontSize="11" FontAttributes="Bold" HorizontalOptions="End"/>
                                     </VerticalStackLayout>
                                 </Grid>
                             </Border>

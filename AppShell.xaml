@@ -49,6 +49,9 @@
         <Tab Title="Inventory" Icon="icon_inventory.svg">
             <ShellContent ContentTemplate="{DataTemplate vendor:InventoryExpensePage}" />
         </Tab>
+        <Tab Title="Complaints" Icon="icon_support.svg">
+            <ShellContent ContentTemplate="{DataTemplate vendor:ComplaintManagementPage}" />
+        </Tab>
         <Tab Title="Reports" Icon="icon_reports.svg">
             <ShellContent ContentTemplate="{DataTemplate vendor:VendorReportsPage}" />
         </Tab>
