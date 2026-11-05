@@ -7,12 +7,16 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using MilkWala.Models;
 using MilkWala.Services;
+using MilkWala.Services.Data;
+using MilkWala.Services.Scheduling;
 using MilkWala.Services.Reporting;
 
 namespace MilkWala.ViewModels
 {
     public partial class VendorDashboardViewModel : BaseViewModel
     {
+        private readonly IDeliveryScheduleService _deliveryScheduler;
+
         [ObservableProperty]
         private int _totalCustomers;
 
@@ -38,9 +42,11 @@ namespace MilkWala.ViewModels
                 LocalDbService dbService,
                 SyncEngineService syncEngine,
                 LocalizationService localization,
-                ILoggerFactory loggerFactory)
+                ILoggerFactory loggerFactory,
+                IDeliveryScheduleService deliveryScheduler)
             : base(dbService, syncEngine, localization, loggerFactory)
         {
+            _deliveryScheduler = deliveryScheduler;
             Title = "Vendor Control Center";
         }
 
@@ -50,6 +56,7 @@ namespace MilkWala.ViewModels
             await RunSafeAsync(async () =>
             {
                 await DbService.InitAsync();
+                await _deliveryScheduler.EnsureDeliveriesAsync(DateTime.Today);
 
                 var customers = await DbService.GetAllAsync<Customer>();
                 TotalCustomers = customers.Count;
@@ -180,6 +187,8 @@ namespace MilkWala.ViewModels
 
     public partial class VendorDeliveriesViewModel : BaseViewModel
     {
+        private readonly IDeliveryScheduleService _deliveryScheduler;
+
         [ObservableProperty]
         private ObservableCollection<Delivery> _deliveries = new();
 
@@ -190,9 +199,11 @@ namespace MilkWala.ViewModels
                 LocalDbService dbService,
                 SyncEngineService syncEngine,
                 LocalizationService localization,
-                ILoggerFactory loggerFactory)
+                ILoggerFactory loggerFactory,
+                IDeliveryScheduleService deliveryScheduler)
             : base(dbService, syncEngine, localization, loggerFactory)
         {
+            _deliveryScheduler = deliveryScheduler;
             Title = "Delivery Management";
         }
 
@@ -202,6 +213,7 @@ namespace MilkWala.ViewModels
             await RunSafeAsync(async () =>
             {
                 await DbService.InitAsync();
+                await _deliveryScheduler.EnsureDeliveriesAsync(DateTime.Today);
                 var list = await DbService.GetTodayDeliveriesAsync(DateTime.Today);
                 Deliveries.Clear();
                 foreach (var d in list)
@@ -212,34 +224,13 @@ namespace MilkWala.ViewModels
         }
 
         [RelayCommand]
-        public async Task UpdateDeliveryStatusAsync(Delivery delivery)
-        {
-            await RunSafeAsync(async () =>
-            {
-                if (delivery == null) return;
-
-                await DbService.InitAsync();
-
-                // Only a completed delivery has a delivery time; skipping must not stamp one.
-                if (delivery.Status == DeliveryStatus.Delivered)
-                    delivery.DeliveredAt = DateTime.Now;
-                delivery.UpdatedAt = DateTime.UtcNow;
-
-                await DbService.UpdateWithSyncAsync(delivery);
-
-                StatusMessage = $"Updated status for {delivery.CustomerName} to {delivery.Status}.";
-                await LoadDeliveriesAsync();
-            });
-        }
-
-        [RelayCommand]
         public async Task MarkDeliveredAsync(Delivery delivery)
         {
             await RunSafeAsync(async () =>
             {
                 if (delivery == null) return;
-                delivery.Status = DeliveryStatus.Delivered;
-                await UpdateDeliveryStatusAsync(delivery);
+                StatusMessage = await ApplyStatusAsync(delivery, DeliveryStatus.Delivered);
+                await LoadDeliveriesAsync();
             });
         }
 
@@ -249,9 +240,18 @@ namespace MilkWala.ViewModels
             await RunSafeAsync(async () =>
             {
                 if (delivery == null) return;
-                delivery.Status = DeliveryStatus.Skipped;
-                await UpdateDeliveryStatusAsync(delivery);
+                StatusMessage = await ApplyStatusAsync(delivery, DeliveryStatus.Skipped);
+                await LoadDeliveriesAsync();
             });
+        }
+
+        /// <summary>Changes the status and bills (or un-bills) the customer in one transaction; returns the message to show.</summary>
+        private async Task<string> ApplyStatusAsync(Delivery delivery, DeliveryStatus status)
+        {
+            DeliveryChange? change = null;
+            await DbService.RunInTransactionAsync(connection =>
+                change = DeliveryLedger.ChangeStatus(connection, delivery.Id, status, DateTime.Now));
+            return change!.Summary();
         }
     }
 

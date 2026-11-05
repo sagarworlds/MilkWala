@@ -7,11 +7,15 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using MilkWala.Models;
 using MilkWala.Services;
+using MilkWala.Services.Data;
+using MilkWala.Services.Scheduling;
 
 namespace MilkWala.ViewModels
 {
     public partial class DeliveryBoyViewModel : BaseViewModel
     {
+        private readonly IDeliveryScheduleService _deliveryScheduler;
+
         [ObservableProperty]
         private string _assignedRouteName = "Route A - Model Town & Green Park";
 
@@ -31,9 +35,11 @@ namespace MilkWala.ViewModels
                 LocalDbService dbService,
                 SyncEngineService syncEngine,
                 LocalizationService localization,
-                ILoggerFactory loggerFactory)
+                ILoggerFactory loggerFactory,
+                IDeliveryScheduleService deliveryScheduler)
             : base(dbService, syncEngine, localization, loggerFactory)
         {
+            _deliveryScheduler = deliveryScheduler;
             Title = "Delivery Staff Module";
         }
 
@@ -43,6 +49,7 @@ namespace MilkWala.ViewModels
             await RunSafeAsync(async () =>
             {
                 await DbService.InitAsync();
+                await _deliveryScheduler.EnsureDeliveriesAsync(DateTime.Today);
 
                 var deliveries = await DbService.GetTodayDeliveriesAsync(DateTime.Today);
                 RouteDeliveries.Clear();
@@ -63,13 +70,7 @@ namespace MilkWala.ViewModels
             {
                 if (delivery == null) return;
 
-                delivery.Status = DeliveryStatus.Delivered;
-                delivery.DeliveredAt = DateTime.Now;
-                delivery.UpdatedAt = DateTime.UtcNow;
-
-                await DbService.UpdateWithSyncAsync(delivery);
-
-                StatusMessage = $"Marked delivered for {delivery.CustomerName} ({delivery.QuantityLitres}L)";
+                StatusMessage = await ApplyStatusAsync(delivery, DeliveryStatus.Delivered);
                 await LoadRouteDeliveriesAsync();
             });
         }
@@ -81,14 +82,18 @@ namespace MilkWala.ViewModels
             {
                 if (delivery == null) return;
 
-                delivery.Status = DeliveryStatus.Skipped;
-                delivery.UpdatedAt = DateTime.UtcNow;
-
-                await DbService.UpdateWithSyncAsync(delivery);
-
-                StatusMessage = $"Marked skipped for {delivery.CustomerName}";
+                StatusMessage = await ApplyStatusAsync(delivery, DeliveryStatus.Skipped);
                 await LoadRouteDeliveriesAsync();
             });
+        }
+
+        /// <summary>Changes the status and bills the customer in one transaction; returns the message to show.</summary>
+        private async Task<string> ApplyStatusAsync(Delivery delivery, DeliveryStatus status)
+        {
+            DeliveryChange? change = null;
+            await DbService.RunInTransactionAsync(connection =>
+                change = DeliveryLedger.ChangeStatus(connection, delivery.Id, status, DateTime.Now));
+            return change!.Summary();
         }
     }
 }

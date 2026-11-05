@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using MilkWala.Models;
 using MilkWala.Services;
+using MilkWala.Services.Scheduling;
 using MilkWala.Services.Data;
 using MilkWala.Services.Identity;
 using MilkWala.Services.Reporting;
@@ -15,6 +16,8 @@ namespace MilkWala.ViewModels
 {
     public partial class CustomerDashboardViewModel : CustomerViewModelBase
     {
+        private readonly IDeliveryScheduleService _deliveryScheduler;
+
         [ObservableProperty]
         private Customer? _currentCustomer;
 
@@ -44,9 +47,11 @@ namespace MilkWala.ViewModels
                 SyncEngineService syncEngine,
                 LocalizationService localization,
                 ILoggerFactory loggerFactory,
-                ICurrentUserService currentUser)
+                ICurrentUserService currentUser,
+                IDeliveryScheduleService deliveryScheduler)
             : base(dbService, syncEngine, localization, loggerFactory, currentUser)
         {
+            _deliveryScheduler = deliveryScheduler;
             Title = "Customer Dashboard";
         }
 
@@ -57,6 +62,7 @@ namespace MilkWala.ViewModels
             {
                 await DbService.InitAsync();
 
+                await _deliveryScheduler.EnsureDeliveriesAsync(DateTime.Today);
                 CurrentCustomer = await RequireCustomerAsync();
 
                 if (CurrentCustomer != null)
@@ -347,17 +353,22 @@ namespace MilkWala.ViewModels
                 if (customer == null) return;
 
                 var amount = RechargeAmount;
-                var description = $"Online Recharge via UPI (Ref: TXN{Random.Shared.Next(1000, 9999)})";
+                var reference = $"TXN{Random.Shared.Next(1000, 9999)}";
 
-                WalletTransaction? tx = null;
+                // Credits the wallet, records the collection for the vendor and pays off any dues, all together.
+                WalletLedger.RechargeResult? result = null;
                 await DbService.RunInTransactionAsync(connection =>
                 {
-                    tx = WalletLedger.Credit(connection, customer.Id, amount, description);
+                    result = WalletLedger.Recharge(
+                        connection, customer.Id, amount, PaymentMode.UPI, reference,
+                        $"Online Recharge via UPI (Ref: {reference})");
                 });
 
-                Balance = tx!.BalanceAfter;
-                Transactions.Insert(0, tx);
-                StatusMessage = $"₹{amount} added to wallet successfully!";
+                Balance = result!.BalanceAfter;
+                StatusMessage = result.DuesCleared > 0
+                    ? $"₹{amount} added. ₹{result.DuesCleared:N2} of your dues were cleared."
+                    : $"₹{amount} added to wallet successfully!";
+                await LoadWalletAsync();
             });
         }
     }
