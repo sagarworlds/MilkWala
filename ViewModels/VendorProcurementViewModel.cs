@@ -4,8 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using MilkWala.Models;
 using MilkWala.Services;
+using MilkWala.Services.Data;
 
 namespace MilkWala.ViewModels
 {
@@ -38,8 +40,12 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private string _statusMessage = string.Empty;
 
-        public VendorProcurementViewModel(LocalDbService dbService, SyncEngineService syncEngine, LocalizationService localization)
-            : base(dbService, syncEngine, localization)
+        public VendorProcurementViewModel(
+                LocalDbService dbService,
+                SyncEngineService syncEngine,
+                LocalizationService localization,
+                ILoggerFactory loggerFactory)
+            : base(dbService, syncEngine, localization, loggerFactory)
         {
             Title = "Farmer Milk Procurement";
         }
@@ -47,29 +53,30 @@ namespace MilkWala.ViewModels
         [RelayCommand]
         public async Task LoadProcurementsAsync()
         {
-            IsBusy = true;
-            await DbService.InitAsync();
-
-            var supplierList = await DbService.GetAllAsync<FarmerSupplier>();
-            Suppliers.Clear();
-            foreach (var s in supplierList)
+            await RunSafeAsync(async () =>
             {
-                Suppliers.Add(s);
-            }
-            if (Suppliers.Count > 0 && SelectedSupplier == null)
-            {
-                SelectedSupplier = Suppliers.First();
-            }
+                await DbService.InitAsync();
 
-            var list = await DbService.GetAllAsync<MilkProcurement>();
-            Procurements.Clear();
-            foreach (var p in list.OrderByDescending(x => x.Date))
-            {
-                Procurements.Add(p);
-            }
+                var supplierList = await DbService.GetAllAsync<FarmerSupplier>();
+                Suppliers.Clear();
+                foreach (var s in supplierList)
+                {
+                    Suppliers.Add(s);
+                }
+                // The list holds fresh objects after every reload, so re-select the same supplier by id
+                // (keeps the picker in step and shows the updated outstanding payout).
+                var selectedId = SelectedSupplier?.Id;
+                SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == selectedId) ?? Suppliers.FirstOrDefault();
 
-            CalculateRate();
-            IsBusy = false;
+                var list = await DbService.GetAllAsync<MilkProcurement>();
+                Procurements.Clear();
+                foreach (var p in list.OrderByDescending(x => x.Date))
+                {
+                    Procurements.Add(p);
+                }
+
+                CalculateRate();
+            });
         }
 
         // Keep the on-screen rate/total preview live while the vendor edits the inputs.
@@ -87,39 +94,35 @@ namespace MilkWala.ViewModels
         [RelayCommand]
         public async Task RecordProcurementAsync()
         {
-            if (SelectedSupplier == null || LitresProcured <= 0)
+            await RunSafeAsync(async () =>
             {
-                StatusMessage = "Please select a farmer supplier and enter litres.";
-                return;
-            }
+                if (SelectedSupplier == null || LitresProcured <= 0)
+                {
+                    StatusMessage = "Please select a farmer supplier and enter litres.";
+                    return;
+                }
 
-            IsBusy = true;
-            await DbService.InitAsync();
+                await DbService.InitAsync();
 
-            CalculateRate();
+                CalculateRate();
 
-            var proc = new MilkProcurement
-            {
-                SupplierId = SelectedSupplier.Id,
-                SupplierName = SelectedSupplier.Name,
-                Date = DateTime.Now,
-                MilkType = SelectedSupplier.MilkType,
-                Litres = LitresProcured,
-                FatPercent = FatPercent,
-                SnfPercent = SnfPercent,
-                RatePerLitre = CalculatedRate,
-                IsPaid = false
-            };
+                var supplierId = SelectedSupplier.Id;
+                var litres = LitresProcured;
+                var fat = FatPercent;
+                var snf = SnfPercent;
+                var rate = CalculatedRate;
+                var recordedAt = DateTime.Now;
 
-            await DbService.InsertAsync(proc);
-            await DbService.EnqueueSyncAsync("MilkProcurement", proc.Id, SyncOperation.Insert, proc);
+                // The purchase, the supplier's higher payout and both sync entries commit together or not at all.
+                MilkProcurement? proc = null;
+                await DbService.RunInTransactionAsync(connection =>
+                {
+                    proc = ProcurementLedger.Record(connection, supplierId, litres, fat, snf, rate, recordedAt);
+                });
 
-            SelectedSupplier.OutstandingPayout += proc.TotalAmount;
-            await DbService.UpdateAsync(SelectedSupplier);
-
-            StatusMessage = $"Procurement logged: {LitresProcured}L @ ₹{CalculatedRate:F2}/L (Total ₹{proc.TotalAmount:N2})";
-            await LoadProcurementsAsync();
-            IsBusy = false;
+                StatusMessage = $"Procurement logged: {LitresProcured}L @ ₹{CalculatedRate:F2}/L (Total ₹{proc!.TotalAmount:N2})";
+                await LoadProcurementsAsync();
+            });
         }
     }
 }

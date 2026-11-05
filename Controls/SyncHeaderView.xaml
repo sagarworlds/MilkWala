@@ -22,6 +22,12 @@
                                FontAttributes="Bold" />
                     </Border>
                 </HorizontalStackLayout>
+                <!-- Shared by every page: shows the last failure reported by a guarded command. -->
+                <Label Text="{Binding ErrorMessage}"
+                       FontSize="12"
+                       TextColor="#FCA5A5"
+                       Margin="0,6,0,0"
+                       IsVisible="{Binding ErrorMessage, Converter={StaticResource StringHasTextConverter}}" />
             </StackLayout>
 
             <Button Grid.Column="1"

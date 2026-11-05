@@ -121,6 +121,13 @@ dotnet test tests/MilkWala.Tests/MilkWala.Tests.csproj
 
 CI runs these tests and an Android build of the app on every pull request.
 
+### Code conventions
+
+- **Dates:** business dates and timestamps users see or filter by (deliveries, payments, expenses, orders) are **local time**; sync/audit metadata (`UpdatedAt`, sync queue and log times) is **UTC**. A test enforces this.
+- **Signed-in user:** screens get the customer from `ICurrentUserService`; never hardcode an id.
+- **Multi-step writes:** use `LocalDbService.RunInTransactionAsync` (or `InsertWithSyncAsync` / `UpdateWithSyncAsync`) so a change and its sync-queue entry commit together. Wallet, store and procurement rules live in `Services/Data/*Ledger.cs`.
+- **View-model commands:** wrap the body in `RunSafeAsync` so failures are logged and shown in the header banner instead of leaving the screen busy.
+
 ---
 
 ## 📊 Database Schema Summary

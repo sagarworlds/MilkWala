@@ -1,6 +1,15 @@
 using System;
 using SQLite;
 
+/*
+ * DATE CONVENTION (enforced by tests/MilkWala.Tests/DateConventionTests.cs)
+ *  - Business dates and timestamps that users see or filter by ("today", "this month": DeliveryDate, payment /
+ *    expense / wallet / order / procurement dates, complaint time, ...) are LOCAL time (DateTime.Now / Today).
+ *    The app is offline-first for a single locality, and these values are shown and grouped as local days.
+ *  - Sync and audit metadata (UpdatedAt, SyncQueue.CreatedAt, SyncLog.SyncTime, User.CreatedAt,
+ *    LoginSession.LoginTime) is UTC, so ordering is unambiguous across devices and time zones.
+ */
+
 namespace MilkWala.Models
 {
     [Table("Users")]
@@ -120,7 +129,7 @@ namespace MilkWala.Models
         public DateTime? PauseStartDate { get; set; }
         public DateTime? PauseEndDate { get; set; }
         public string DeliveryFrequency { get; set; } = "Daily"; // Daily / Alternate / Custom
-        public DateTime StartDate { get; set; } = DateTime.UtcNow;
+        public DateTime StartDate { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
 
@@ -134,7 +143,7 @@ namespace MilkWala.Models
         public decimal Amount { get; set; }
         public PaymentMode Mode { get; set; }
         public string ReferenceNumber { get; set; } = string.Empty;
-        public DateTime PaymentDate { get; set; } = DateTime.UtcNow;
+        public DateTime PaymentDate { get; set; } = DateTime.Now;
         public string Remarks { get; set; } = string.Empty;
         public bool IsVerified { get; set; } = true;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
@@ -150,7 +159,7 @@ namespace MilkWala.Models
         public decimal Amount { get; set; } // Positive for Credit, Negative for Debit
         public string TransactionType { get; set; } = "Credit"; // Credit / Debit
         public string Description { get; set; } = string.Empty;
-        public DateTime Date { get; set; } = DateTime.UtcNow;
+        public DateTime Date { get; set; } = DateTime.Now;
         public decimal BalanceAfter { get; set; }
     }
 
@@ -162,7 +171,7 @@ namespace MilkWala.Models
         public ExpenseCategory Category { get; set; }
         public decimal Amount { get; set; }
         public string Description { get; set; } = string.Empty;
-        public DateTime Date { get; set; } = DateTime.UtcNow;
+        public DateTime Date { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
 
@@ -179,7 +188,7 @@ namespace MilkWala.Models
         public string Description { get; set; } = string.Empty;
         public ComplaintStatus Status { get; set; } = ComplaintStatus.Open;
         public string ResolutionNotes { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
 
@@ -194,7 +203,7 @@ namespace MilkWala.Models
         public DateTime TargetDate { get; set; }
         public string SpecialInstruction { get; set; } = string.Empty;
         public bool IsApproved { get; set; } = true;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 
     [Table("FarmerSuppliers")]
@@ -217,7 +226,7 @@ namespace MilkWala.Models
         public int Id { get; set; }
         public int SupplierId { get; set; }
         public string SupplierName { get; set; } = string.Empty;
-        public DateTime Date { get; set; } = DateTime.UtcNow;
+        public DateTime Date { get; set; } = DateTime.Now;
         public MilkType MilkType { get; set; } = MilkType.Cow;
         public double Litres { get; set; }
         public double FatPercent { get; set; }
@@ -250,7 +259,7 @@ namespace MilkWala.Models
         public string ProductName { get; set; } = string.Empty;
         public int Quantity { get; set; } = 1;
         public decimal TotalPrice { get; set; }
-        public DateTime OrderDate { get; set; } = DateTime.UtcNow;
+        public DateTime OrderDate { get; set; } = DateTime.Now;
         public string Status { get; set; } = "Scheduled for Delivery";
     }
 

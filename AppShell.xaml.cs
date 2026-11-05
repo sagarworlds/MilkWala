@@ -1,5 +1,6 @@
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
+using MilkWala.Services.Identity;
 
 namespace MilkWala
 {
@@ -9,7 +10,7 @@ namespace MilkWala
         {
             InitializeComponent();
 
-            string role = Preferences.Default.Get("ActiveRole", "Customer");
+            string role = Preferences.Default.Get(SessionKeys.ActiveRole, "Customer");
 
             if (role == "Vendor")
             {

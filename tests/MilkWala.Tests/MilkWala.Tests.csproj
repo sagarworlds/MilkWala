@@ -18,6 +18,9 @@
 		<Compile Include="..\..\Models\*.cs" Link="Linked\Models\%(Filename)%(Extension)" />
 		<Compile Include="..\..\Helpers\*.cs" Link="Linked\Helpers\%(Filename)%(Extension)" />
 		<Compile Include="..\..\Services\Reporting\*.cs" Link="Linked\Reporting\%(Filename)%(Extension)" />
+		<Compile Include="..\..\Services\Data\*.cs" Link="Linked\Data\%(Filename)%(Extension)" />
+		<!-- Only the pure lookup: CurrentUserService itself depends on MAUI preferences. -->
+		<Compile Include="..\..\Services\Identity\CustomerLookup.cs" Link="Linked\Identity\CustomerLookup.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

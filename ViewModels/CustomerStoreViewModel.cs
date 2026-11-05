@@ -4,12 +4,15 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using MilkWala.Models;
 using MilkWala.Services;
+using MilkWala.Services.Data;
+using MilkWala.Services.Identity;
 
 namespace MilkWala.ViewModels
 {
-    public partial class CustomerStoreViewModel : BaseViewModel
+    public partial class CustomerStoreViewModel : CustomerViewModelBase
     {
         [ObservableProperty]
         private ObservableCollection<DairyProduct> _dairyProducts = new();
@@ -20,8 +23,13 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private string _statusMessage = string.Empty;
 
-        public CustomerStoreViewModel(LocalDbService dbService, SyncEngineService syncEngine, LocalizationService localization)
-            : base(dbService, syncEngine, localization)
+        public CustomerStoreViewModel(
+                LocalDbService dbService,
+                SyncEngineService syncEngine,
+                LocalizationService localization,
+                ILoggerFactory loggerFactory,
+                ICurrentUserService currentUser)
+            : base(dbService, syncEngine, localization, loggerFactory, currentUser)
         {
             Title = "Dairy Products Store";
         }
@@ -29,76 +37,57 @@ namespace MilkWala.ViewModels
         [RelayCommand]
         public async Task LoadStoreCatalogAsync()
         {
-            IsBusy = true;
-            await DbService.InitAsync();
-
-            var products = await DbService.GetAllAsync<DairyProduct>();
-            DairyProducts.Clear();
-            foreach (var p in products)
+            await RunSafeAsync(async () =>
             {
-                DairyProducts.Add(p);
-            }
+                await DbService.InitAsync();
 
-            var orders = await DbService.GetAllAsync<StoreOrder>();
-            MyStoreOrders.Clear();
-            foreach (var o in orders.Where(x => x.CustomerId == 1).OrderByDescending(x => x.OrderDate))
-            {
-                MyStoreOrders.Add(o);
-            }
+                var products = await DbService.GetAllAsync<DairyProduct>();
+                DairyProducts.Clear();
+                foreach (var p in products)
+                {
+                    DairyProducts.Add(p);
+                }
 
-            IsBusy = false;
+                var customer = await RequireCustomerAsync();
+                if (customer == null) return;
+
+                var orders = await DbService.GetAllAsync<StoreOrder>();
+                MyStoreOrders.Clear();
+                foreach (var o in orders.Where(x => x.CustomerId == customer.Id).OrderByDescending(x => x.OrderDate))
+                {
+                    MyStoreOrders.Add(o);
+                }
+            });
         }
 
         [RelayCommand]
         public async Task OrderProductAsync(DairyProduct product)
         {
-            if (product == null) return;
-
-            IsBusy = true;
-            await DbService.InitAsync();
-
-            var customer = await DbService.GetCustomerByUserIdAsync(1);
-            if (customer != null && customer.WalletBalance < product.Price)
+            await RunSafeAsync(async () =>
             {
-                StatusMessage = $"Insufficient wallet balance for {product.Name}. Please recharge.";
-                IsBusy = false;
-                return;
-            }
+                if (product == null) return;
 
-            var order = new StoreOrder
-            {
-                CustomerId = 1,
-                ProductId = product.Id,
-                ProductName = product.Name,
-                Quantity = 1,
-                TotalPrice = product.Price,
-                OrderDate = DateTime.Now,
-                Status = "Scheduled with tomorrow's milk"
-            };
+                var customer = await RequireCustomerAsync();
+                if (customer == null) return;
 
-            await DbService.InsertAsync(order);
-            await DbService.EnqueueSyncAsync("StoreOrders", order.Id, SyncOperation.Insert, order);
-
-            if (customer != null)
-            {
-                customer.WalletBalance -= product.Price;
-                await DbService.UpdateAsync(customer);
-
-                var tx = new WalletTransaction
+                try
                 {
-                    CustomerId = 1,
-                    Amount = -product.Price,
-                    TransactionType = "Debit",
-                    Description = $"Purchased {product.Name} from Store",
-                    Date = DateTime.Now,
-                    BalanceAfter = customer.WalletBalance
-                };
-                await DbService.InsertAsync(tx);
-            }
+                    // Payment, order and sync entries commit together or not at all; the balance is
+                    // re-checked inside the transaction so a stale screen cannot overspend the wallet.
+                    await DbService.RunInTransactionAsync(connection =>
+                    {
+                        StoreOrderLedger.Place(connection, customer.Id, product);
+                    });
+                }
+                catch (InsufficientBalanceException)
+                {
+                    StatusMessage = $"Insufficient wallet balance for {product.Name}. Please recharge.";
+                    return;
+                }
 
-            StatusMessage = $"Ordered {product.Name}! Will be delivered with morning milk.";
-            await LoadStoreCatalogAsync();
-            IsBusy = false;
+                StatusMessage = $"Ordered {product.Name}! Will be delivered with morning milk.";
+                await LoadStoreCatalogAsync();
+            });
         }
     }
 }

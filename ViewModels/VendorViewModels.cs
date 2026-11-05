@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using MilkWala.Models;
 using MilkWala.Services;
 using MilkWala.Services.Reporting;
@@ -33,8 +34,12 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private ObservableCollection<Delivery> _pendingDeliveriesList = new();
 
-        public VendorDashboardViewModel(LocalDbService dbService, SyncEngineService syncEngine, LocalizationService localization)
-            : base(dbService, syncEngine, localization)
+        public VendorDashboardViewModel(
+                LocalDbService dbService,
+                SyncEngineService syncEngine,
+                LocalizationService localization,
+                ILoggerFactory loggerFactory)
+            : base(dbService, syncEngine, localization, loggerFactory)
         {
             Title = "Vendor Control Center";
         }
@@ -42,34 +47,34 @@ namespace MilkWala.ViewModels
         [RelayCommand]
         public async Task LoadDashboardDataAsync()
         {
-            IsBusy = true;
-            await DbService.InitAsync();
-
-            var customers = await DbService.GetAllAsync<Customer>();
-            TotalCustomers = customers.Count;
-            TotalOutstandingAmount = customers.Sum(c => c.OutstandingBalance);
-
-            var todayDeliveries = await DbService.GetTodayDeliveriesAsync(DateTime.Today);
-            TodaysTotalDeliveries = todayDeliveries.Count;
-
-            var pending = todayDeliveries.Where(d => d.Status == DeliveryStatus.Pending).ToList();
-            PendingDeliveriesCount = pending.Count;
-
-            PendingDeliveriesList.Clear();
-            foreach (var p in pending)
+            await RunSafeAsync(async () =>
             {
-                PendingDeliveriesList.Add(p);
-            }
+                await DbService.InitAsync();
 
-            var payments = await DbService.GetAllAsync<Payment>();
-            TodayCollection = payments.Where(p => p.PaymentDate.Date == DateTime.Today).Sum(p => p.Amount);
+                var customers = await DbService.GetAllAsync<Customer>();
+                TotalCustomers = customers.Count;
+                TotalOutstandingAmount = customers.Sum(c => c.OutstandingBalance);
 
-            // Revenue for the whole current month, not just today's deliveries.
-            var monthStart = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-            var monthDeliveries = await DbService.GetDeliveriesBetweenAsync(monthStart, monthStart.AddMonths(1));
-            MonthlyRevenue = DeliveryStats.Revenue(monthDeliveries);
+                var todayDeliveries = await DbService.GetTodayDeliveriesAsync(DateTime.Today);
+                TodaysTotalDeliveries = todayDeliveries.Count;
 
-            IsBusy = false;
+                var pending = todayDeliveries.Where(d => d.Status == DeliveryStatus.Pending).ToList();
+                PendingDeliveriesCount = pending.Count;
+
+                PendingDeliveriesList.Clear();
+                foreach (var p in pending)
+                {
+                    PendingDeliveriesList.Add(p);
+                }
+
+                var payments = await DbService.GetAllAsync<Payment>();
+                TodayCollection = payments.Where(p => p.PaymentDate.Date == DateTime.Today).Sum(p => p.Amount);
+
+                // Revenue for the whole current month, not just today's deliveries.
+                var monthStart = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                var monthDeliveries = await DbService.GetDeliveriesBetweenAsync(monthStart, monthStart.AddMonths(1));
+                MonthlyRevenue = DeliveryStats.Revenue(monthDeliveries);
+            });
         }
     }
 
@@ -96,8 +101,12 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private string _statusMessage = string.Empty;
 
-        public VendorCustomersViewModel(LocalDbService dbService, SyncEngineService syncEngine, LocalizationService localization)
-            : base(dbService, syncEngine, localization)
+        public VendorCustomersViewModel(
+                LocalDbService dbService,
+                SyncEngineService syncEngine,
+                LocalizationService localization,
+                ILoggerFactory loggerFactory)
+            : base(dbService, syncEngine, localization, loggerFactory)
         {
             Title = "Customer Management";
         }
@@ -105,62 +114,67 @@ namespace MilkWala.ViewModels
         [RelayCommand]
         public async Task LoadCustomersAsync()
         {
-            await DbService.InitAsync();
-            var list = await DbService.GetAllAsync<Customer>();
-            CustomerList.Clear();
-            foreach (var c in list)
+            await RunSafeAsync(async () =>
             {
-                CustomerList.Add(c);
-            }
+                await DbService.InitAsync();
+                var list = await DbService.GetAllAsync<Customer>();
+                CustomerList.Clear();
+                foreach (var c in list)
+                {
+                    CustomerList.Add(c);
+                }
+            });
         }
 
         [RelayCommand]
         public async Task AddCustomerAsync()
         {
-            if (string.IsNullOrWhiteSpace(NewCustomerName) || string.IsNullOrWhiteSpace(NewCustomerMobile))
+            await RunSafeAsync(async () =>
             {
-                StatusMessage = "Name and Mobile number are required.";
-                return;
-            }
+                if (string.IsNullOrWhiteSpace(NewCustomerName) || string.IsNullOrWhiteSpace(NewCustomerMobile))
+                {
+                    StatusMessage = "Name and Mobile number are required.";
+                    return;
+                }
 
-            IsBusy = true;
-            await DbService.InitAsync();
+                await DbService.InitAsync();
 
-            var customer = new Customer
-            {
-                Name = NewCustomerName,
-                Mobile = NewCustomerMobile,
-                Address = NewCustomerAddress,
-                PreferredMilkType = NewMilkType,
-                PreferredQuantity = NewQuantity,
-                RouteId = 1,
-                WalletBalance = 500.00m,
-                IsActive = true,
-                UpdatedAt = DateTime.UtcNow
-            };
+                var customer = new Customer
+                {
+                    Name = NewCustomerName,
+                    Mobile = NewCustomerMobile,
+                    Address = NewCustomerAddress,
+                    PreferredMilkType = NewMilkType,
+                    PreferredQuantity = NewQuantity,
+                    RouteId = 1,
+                    WalletBalance = 500.00m,
+                    IsActive = true,
+                    UpdatedAt = DateTime.UtcNow
+                };
 
-            await DbService.InsertAsync(customer);
-            await DbService.EnqueueSyncAsync("Customers", customer.Id, SyncOperation.Insert, customer);
+                await DbService.InsertWithSyncAsync(customer);
 
-            NewCustomerName = string.Empty;
-            NewCustomerMobile = string.Empty;
-            NewCustomerAddress = string.Empty;
-            StatusMessage = "Customer added successfully!";
+                NewCustomerName = string.Empty;
+                NewCustomerMobile = string.Empty;
+                NewCustomerAddress = string.Empty;
+                StatusMessage = "Customer added successfully!";
 
-            await LoadCustomersAsync();
-            IsBusy = false;
+                await LoadCustomersAsync();
+            });
         }
 
         [RelayCommand]
         public async Task ToggleStatusAsync(Customer customer)
         {
-            if (customer == null) return;
-            customer.IsActive = !customer.IsActive;
-            customer.UpdatedAt = DateTime.UtcNow;
+            await RunSafeAsync(async () =>
+            {
+                if (customer == null) return;
+                customer.IsActive = !customer.IsActive;
+                customer.UpdatedAt = DateTime.UtcNow;
 
-            await DbService.UpdateAsync(customer);
-            await DbService.EnqueueSyncAsync("Customers", customer.Id, SyncOperation.Update, customer);
-            await LoadCustomersAsync();
+                await DbService.UpdateWithSyncAsync(customer);
+                await LoadCustomersAsync();
+            });
         }
     }
 
@@ -172,8 +186,12 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private string _statusMessage = string.Empty;
 
-        public VendorDeliveriesViewModel(LocalDbService dbService, SyncEngineService syncEngine, LocalizationService localization)
-            : base(dbService, syncEngine, localization)
+        public VendorDeliveriesViewModel(
+                LocalDbService dbService,
+                SyncEngineService syncEngine,
+                LocalizationService localization,
+                ILoggerFactory loggerFactory)
+            : base(dbService, syncEngine, localization, loggerFactory)
         {
             Title = "Delivery Management";
         }
@@ -181,50 +199,59 @@ namespace MilkWala.ViewModels
         [RelayCommand]
         public async Task LoadDeliveriesAsync()
         {
-            IsBusy = true;
-            await DbService.InitAsync();
-            var list = await DbService.GetTodayDeliveriesAsync(DateTime.Today);
-            Deliveries.Clear();
-            foreach (var d in list)
+            await RunSafeAsync(async () =>
             {
-                Deliveries.Add(d);
-            }
-            IsBusy = false;
+                await DbService.InitAsync();
+                var list = await DbService.GetTodayDeliveriesAsync(DateTime.Today);
+                Deliveries.Clear();
+                foreach (var d in list)
+                {
+                    Deliveries.Add(d);
+                }
+            });
         }
 
         [RelayCommand]
         public async Task UpdateDeliveryStatusAsync(Delivery delivery)
         {
-            if (delivery == null) return;
+            await RunSafeAsync(async () =>
+            {
+                if (delivery == null) return;
 
-            await DbService.InitAsync();
+                await DbService.InitAsync();
 
-            // Only a completed delivery has a delivery time; skipping must not stamp one.
-            if (delivery.Status == DeliveryStatus.Delivered)
-                delivery.DeliveredAt = DateTime.Now;
-            delivery.UpdatedAt = DateTime.UtcNow;
+                // Only a completed delivery has a delivery time; skipping must not stamp one.
+                if (delivery.Status == DeliveryStatus.Delivered)
+                    delivery.DeliveredAt = DateTime.Now;
+                delivery.UpdatedAt = DateTime.UtcNow;
 
-            await DbService.UpdateAsync(delivery);
-            await DbService.EnqueueSyncAsync("Deliveries", delivery.Id, SyncOperation.Update, delivery);
+                await DbService.UpdateWithSyncAsync(delivery);
 
-            StatusMessage = $"Updated status for {delivery.CustomerName} to {delivery.Status}.";
-            await LoadDeliveriesAsync();
+                StatusMessage = $"Updated status for {delivery.CustomerName} to {delivery.Status}.";
+                await LoadDeliveriesAsync();
+            });
         }
 
         [RelayCommand]
         public async Task MarkDeliveredAsync(Delivery delivery)
         {
-            if (delivery == null) return;
-            delivery.Status = DeliveryStatus.Delivered;
-            await UpdateDeliveryStatusAsync(delivery);
+            await RunSafeAsync(async () =>
+            {
+                if (delivery == null) return;
+                delivery.Status = DeliveryStatus.Delivered;
+                await UpdateDeliveryStatusAsync(delivery);
+            });
         }
 
         [RelayCommand]
         public async Task MarkSkippedAsync(Delivery delivery)
         {
-            if (delivery == null) return;
-            delivery.Status = DeliveryStatus.Skipped;
-            await UpdateDeliveryStatusAsync(delivery);
+            await RunSafeAsync(async () =>
+            {
+                if (delivery == null) return;
+                delivery.Status = DeliveryStatus.Skipped;
+                await UpdateDeliveryStatusAsync(delivery);
+            });
         }
     }
 
@@ -262,8 +289,12 @@ namespace MilkWala.ViewModels
             ExpenseCategory.Fuel, ExpenseCategory.Salary, ExpenseCategory.Maintenance, ExpenseCategory.Packaging, ExpenseCategory.Miscellaneous
         };
 
-        public VendorInventoryExpenseViewModel(LocalDbService dbService, SyncEngineService syncEngine, LocalizationService localization)
-            : base(dbService, syncEngine, localization)
+        public VendorInventoryExpenseViewModel(
+                LocalDbService dbService,
+                SyncEngineService syncEngine,
+                LocalizationService localization,
+                ILoggerFactory loggerFactory)
+            : base(dbService, syncEngine, localization, loggerFactory)
         {
             Title = "Inventory & Expenses";
         }
@@ -271,53 +302,56 @@ namespace MilkWala.ViewModels
         [RelayCommand]
         public async Task LoadDataAsync()
         {
-            await DbService.InitAsync();
-            var todayDeliveries = await DbService.GetTodayDeliveriesAsync(DateTime.Today);
-            DistributedStock = (decimal)DeliveryStats.Litres(todayDeliveries);
-
-            var vendors = await DbService.GetAllAsync<Vendor>();
-            var v = vendors.FirstOrDefault();
-            if (v != null)
+            await RunSafeAsync(async () =>
             {
-                MorningStock = v.TotalMorningStockLitres;
-                EveningStock = v.TotalEveningStockLitres;
-            }
+                await DbService.InitAsync();
+                var todayDeliveries = await DbService.GetTodayDeliveriesAsync(DateTime.Today);
+                DistributedStock = (decimal)DeliveryStats.Litres(todayDeliveries);
 
-            RemainingStock = (MorningStock + EveningStock) - DistributedStock;
+                var vendors = await DbService.GetAllAsync<Vendor>();
+                var v = vendors.FirstOrDefault();
+                if (v != null)
+                {
+                    MorningStock = v.TotalMorningStockLitres;
+                    EveningStock = v.TotalEveningStockLitres;
+                }
 
-            var list = await DbService.GetAllAsync<Expense>();
-            Expenses.Clear();
-            foreach (var e in list.OrderByDescending(x => x.Date))
-            {
-                Expenses.Add(e);
-            }
+                RemainingStock = (MorningStock + EveningStock) - DistributedStock;
+
+                var list = await DbService.GetAllAsync<Expense>();
+                Expenses.Clear();
+                foreach (var e in list.OrderByDescending(x => x.Date))
+                {
+                    Expenses.Add(e);
+                }
+            });
         }
 
         [RelayCommand]
         public async Task AddExpenseAsync()
         {
-            if (ExpenseAmount <= 0) return;
-
-            IsBusy = true;
-            await DbService.InitAsync();
-
-            var exp = new Expense
+            await RunSafeAsync(async () =>
             {
-                Category = SelectedCategory,
-                Amount = ExpenseAmount,
-                Description = string.IsNullOrWhiteSpace(ExpenseDescription) ? SelectedCategory.ToString() : ExpenseDescription,
-                Date = DateTime.Now
-            };
+                if (ExpenseAmount <= 0) return;
 
-            await DbService.InsertAsync(exp);
-            await DbService.EnqueueSyncAsync("Expenses", exp.Id, SyncOperation.Insert, exp);
+                await DbService.InitAsync();
 
-            ExpenseAmount = 0;
-            ExpenseDescription = string.Empty;
-            StatusMessage = "Expense logged successfully!";
+                var exp = new Expense
+                {
+                    Category = SelectedCategory,
+                    Amount = ExpenseAmount,
+                    Description = string.IsNullOrWhiteSpace(ExpenseDescription) ? SelectedCategory.ToString() : ExpenseDescription,
+                    Date = DateTime.Now
+                };
 
-            await LoadDataAsync();
-            IsBusy = false;
+                await DbService.InsertWithSyncAsync(exp);
+
+                ExpenseAmount = 0;
+                ExpenseDescription = string.Empty;
+                StatusMessage = "Expense logged successfully!";
+
+                await LoadDataAsync();
+            });
         }
     }
 
@@ -344,8 +378,12 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private double _totalLitresSold;
 
-        public VendorReportsViewModel(LocalDbService dbService, SyncEngineService syncEngine, LocalizationService localization)
-            : base(dbService, syncEngine, localization)
+        public VendorReportsViewModel(
+                LocalDbService dbService,
+                SyncEngineService syncEngine,
+                LocalizationService localization,
+                ILoggerFactory loggerFactory)
+            : base(dbService, syncEngine, localization, loggerFactory)
         {
             Title = "Reports & Analytics";
         }
@@ -353,26 +391,27 @@ namespace MilkWala.ViewModels
         [RelayCommand]
         public async Task LoadReportsAsync()
         {
-            IsBusy = true;
-            await DbService.InitAsync();
+            await RunSafeAsync(async () =>
+            {
+                await DbService.InitAsync();
 
-            var month = DateTime.Today;
-            ReportMonthLabel = $"Business Summary - {month:MMMM yyyy}";
+                var month = DateTime.Today;
+                ReportMonthLabel = $"Business Summary - {month:MMMM yyyy}";
 
-            var monthStart = new DateTime(month.Year, month.Month, 1);
-            var deliveries = await DbService.GetDeliveriesBetweenAsync(monthStart, monthStart.AddMonths(1));
-            var payments = await DbService.GetAllAsync<Payment>();
-            var expenses = await DbService.GetAllAsync<Expense>();
-            var procurements = await DbService.GetAllAsync<MilkProcurement>();
+                var monthStart = new DateTime(month.Year, month.Month, 1);
+                var deliveries = await DbService.GetDeliveriesBetweenAsync(monthStart, monthStart.AddMonths(1));
+                var payments = await DbService.GetAllAsync<Payment>();
+                var expenses = await DbService.GetAllAsync<Expense>();
+                var procurements = await DbService.GetAllAsync<MilkProcurement>();
 
-            var report = MonthlyReportCalculator.Calculate(month, deliveries, payments, expenses, procurements);
-            TotalSales = report.TotalSales;
-            TotalLitresSold = report.TotalLitresSold;
-            TotalCollection = report.TotalCollection;
-            TotalExpenses = report.TotalExpenses;
-            TotalProcurementCost = report.TotalProcurementCost;
-            NetProfit = report.NetProfit;
-            IsBusy = false;
+                var report = MonthlyReportCalculator.Calculate(month, deliveries, payments, expenses, procurements);
+                TotalSales = report.TotalSales;
+                TotalLitresSold = report.TotalLitresSold;
+                TotalCollection = report.TotalCollection;
+                TotalExpenses = report.TotalExpenses;
+                TotalProcurementCost = report.TotalProcurementCost;
+                NetProfit = report.NetProfit;
+            });
         }
     }
 }

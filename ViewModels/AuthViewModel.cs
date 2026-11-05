@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using MilkWala.Models;
 using MilkWala.Services;
+using MilkWala.Services.Identity;
 using Microsoft.Maui.Controls;
 
 namespace MilkWala.ViewModels
@@ -27,35 +28,34 @@ namespace MilkWala.ViewModels
         private string _statusMessage = string.Empty;
 
         private readonly MockDataSeeder _seeder;
-        private readonly ILogger<AuthViewModel> _logger;
 
         public AuthViewModel(
             LocalDbService dbService,
             SyncEngineService syncEngine,
             LocalizationService localization,
-            MockDataSeeder seeder,
-            ILogger<AuthViewModel> logger)
-            : base(dbService, syncEngine, localization)
+            ILoggerFactory loggerFactory,
+            MockDataSeeder seeder)
+            : base(dbService, syncEngine, localization, loggerFactory)
         {
             _seeder = seeder;
-            _logger = logger;
             Title = "Login to MilkWala";
         }
 
         [RelayCommand]
         public async Task SendOtpAsync()
         {
-            if (string.IsNullOrWhiteSpace(MobileNumber) || MobileNumber.Length < 10)
+            await RunSafeAsync(async () =>
             {
-                StatusMessage = "Please enter a valid 10-digit mobile number.";
-                return;
-            }
+                if (string.IsNullOrWhiteSpace(MobileNumber) || MobileNumber.Length < 10)
+                {
+                    StatusMessage = "Please enter a valid 10-digit mobile number.";
+                    return;
+                }
 
-            IsBusy = true;
-            await Task.Delay(400); // Simulate network
-            IsOtpSent = true;
-            StatusMessage = "OTP sent to " + MobileNumber + " (Use 1234)";
-            IsBusy = false;
+                await Task.Delay(400); // Simulate network
+                IsOtpSent = true;
+                StatusMessage = "OTP sent to " + MobileNumber + " (Use 1234)";
+            });
         }
 
         [RelayCommand]
@@ -73,8 +73,8 @@ namespace MilkWala.ViewModels
                 await _seeder.EnsureSeededAsync();
 
                 // Set current active role preference
-                Preferences.Default.Set("ActiveRole", SelectedRole.ToString());
-                Preferences.Default.Set("UserMobile", MobileNumber);
+                Preferences.Default.Set(SessionKeys.ActiveRole, SelectedRole.ToString());
+                Preferences.Default.Set(SessionKeys.UserMobile, MobileNumber);
 
                 StatusMessage = "Login Successful!";
 
@@ -86,7 +86,7 @@ namespace MilkWala.ViewModels
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Login failed while preparing local data for role {Role}", SelectedRole);
+                Logger.LogError(ex, "Login failed while preparing local data for role {Role}", SelectedRole);
                 StatusMessage = "Could not prepare local data. Please try again or restart the app.";
             }
             finally

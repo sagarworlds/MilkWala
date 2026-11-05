@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Storage;
 using MilkWala.Helpers;
 using MilkWala.Models;
+using MilkWala.Services.Data;
 
 namespace MilkWala.Services
 {
@@ -155,20 +156,32 @@ namespace MilkWala.Services
             return GetDeliveriesBetweenAsync(start, start.AddDays(1));
         }
 
-        public async Task EnqueueSyncAsync(string tableName, int recordId, SyncOperation op, object itemPayload)
+        /// <summary>
+        /// Runs <paramref name="work"/> in one SQLite transaction. If it throws, every write it made is rolled back
+        /// and the exception is rethrown.
+        /// </summary>
+        public async Task RunInTransactionAsync(Action<SQLiteConnection> work)
         {
+            ArgumentNullException.ThrowIfNull(work);
             await InitAsync();
-            var queueItem = new SyncQueueItem
-            {
-                TableName = tableName,
-                RecordId = recordId,
-                Operation = op,
-                PayloadJson = System.Text.Json.JsonSerializer.Serialize(itemPayload),
-                CreatedAt = DateTime.UtcNow,
-                Status = SyncStatus.Pending
-            };
-            await Database.InsertAsync(queueItem);
+            await Database.RunInTransactionAsync(work);
         }
+
+        /// <summary>Inserts the entity and queues it for sync, atomically. The entity's Id is populated on return.</summary>
+        public Task InsertWithSyncAsync(object item) =>
+            RunInTransactionAsync(connection =>
+            {
+                connection.Insert(item);
+                SyncQueueWriter.Enqueue(connection, item, SyncOperation.Insert);
+            });
+
+        /// <summary>Updates the entity and queues the change for sync, atomically.</summary>
+        public Task UpdateWithSyncAsync(object item) =>
+            RunInTransactionAsync(connection =>
+            {
+                connection.Update(item);
+                SyncQueueWriter.Enqueue(connection, item, SyncOperation.Update);
+            });
         #endregion
     }
 }
