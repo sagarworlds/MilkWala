@@ -37,8 +37,34 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private ObservableCollection<MilkProcurement> _procurements = new();
 
+        // --- payout
         [ObservableProperty]
-        private string _statusMessage = string.Empty;
+        private decimal _selectedSupplierOutstanding;
+
+        [ObservableProperty]
+        private decimal _payoutAmount;
+
+        // --- add farmer
+        [ObservableProperty]
+        private string _newSupplierName = string.Empty;
+
+        [ObservableProperty]
+        private string _newSupplierMobile = string.Empty;
+
+        [ObservableProperty]
+        private MilkType _newSupplierMilkType = MilkType.Cow;
+
+        [ObservableProperty]
+        private double _newSupplierFatPercent = 4.2;
+
+        [ObservableProperty]
+        private decimal _newSupplierRate = 42m;
+
+        public ObservableCollection<MilkType> AvailableMilkTypes { get; } = new()
+        {
+            MilkType.Cow, MilkType.Buffalo, MilkType.Toned, MilkType.FullCream, MilkType.Organic
+        };
+
 
         public VendorProcurementViewModel(
                 LocalDbService dbService,
@@ -77,6 +103,13 @@ namespace MilkWala.ViewModels
 
                 CalculateRate();
             });
+        }
+
+        // Picking a farmer shows what is owed and pre-fills the payment with the full amount.
+        partial void OnSelectedSupplierChanged(FarmerSupplier? value)
+        {
+            SelectedSupplierOutstanding = value?.OutstandingPayout ?? 0m;
+            PayoutAmount = SelectedSupplierOutstanding;
         }
 
         // Keep the on-screen rate/total preview live while the vendor edits the inputs.
@@ -121,6 +154,66 @@ namespace MilkWala.ViewModels
                 });
 
                 StatusMessage = $"Procurement logged: {LitresProcured}L @ ₹{CalculatedRate:F2}/L (Total ₹{proc!.TotalAmount:N2})";
+                await LoadProcurementsAsync();
+            });
+        }
+
+        [RelayCommand]
+        public async Task AddSupplierAsync()
+        {
+            await RunSafeAsync(async () =>
+            {
+                FarmerSupplier? supplier = null;
+                try
+                {
+                    await DbService.RunInTransactionAsync(connection =>
+                        supplier = SupplierLedger.Add(
+                            connection, NewSupplierName, NewSupplierMobile, NewSupplierMilkType,
+                            NewSupplierFatPercent, NewSupplierRate));
+                }
+                catch (BusinessRuleException ex)
+                {
+                    ErrorMessage = ex.Message;
+                    return;
+                }
+
+                NewSupplierName = string.Empty;
+                NewSupplierMobile = string.Empty;
+                StatusMessage = $"{supplier!.Name} added as a supplier.";
+
+                await LoadProcurementsAsync();
+                SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == supplier.Id) ?? SelectedSupplier;
+            });
+        }
+
+        [RelayCommand]
+        public async Task PaySupplierAsync()
+        {
+            await RunSafeAsync(async () =>
+            {
+                if (SelectedSupplier == null)
+                {
+                    ErrorMessage = "Select the farmer you are paying.";
+                    return;
+                }
+
+                var supplierId = SelectedSupplier.Id;
+                var amount = PayoutAmount;
+
+                SupplierLedger.PayoutResult? result = null;
+                try
+                {
+                    await DbService.RunInTransactionAsync(connection =>
+                        result = SupplierLedger.Pay(connection, supplierId, amount));
+                }
+                catch (BusinessRuleException ex)
+                {
+                    ErrorMessage = ex.Message;
+                    return;
+                }
+
+                StatusMessage = $"Paid ₹{amount:N2} to {result!.Supplier.Name}. " +
+                    $"{result.PurchasesSettled} purchase(s) fully settled; ₹{result.Supplier.OutstandingPayout:N2} still owed.";
                 await LoadProcurementsAsync();
             });
         }

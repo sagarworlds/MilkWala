@@ -106,7 +106,16 @@ namespace MilkWala.ViewModels
         private double _newQuantity = 1.0;
 
         [ObservableProperty]
-        private string _statusMessage = string.Empty;
+        private DeliveryRoute? _selectedRoute;
+
+        [ObservableProperty]
+        private ObservableCollection<DeliveryRoute> _routes = new();
+
+        public ObservableCollection<MilkType> AvailableMilkTypes { get; } = new()
+        {
+            MilkType.Cow, MilkType.Buffalo, MilkType.Toned, MilkType.FullCream, MilkType.Organic
+        };
+
 
         public VendorCustomersViewModel(
                 LocalDbService dbService,
@@ -130,6 +139,15 @@ namespace MilkWala.ViewModels
                 {
                     CustomerList.Add(c);
                 }
+
+                var routeList = await DbService.GetAllAsync<DeliveryRoute>();
+                var selectedRouteId = SelectedRoute?.Id;
+                Routes.Clear();
+                foreach (var route in routeList.OrderBy(r => r.SequenceOrder))
+                {
+                    Routes.Add(route);
+                }
+                SelectedRoute = Routes.FirstOrDefault(r => r.Id == selectedRouteId) ?? Routes.FirstOrDefault();
             });
         }
 
@@ -138,33 +156,33 @@ namespace MilkWala.ViewModels
         {
             await RunSafeAsync(async () =>
             {
-                if (string.IsNullOrWhiteSpace(NewCustomerName) || string.IsNullOrWhiteSpace(NewCustomerMobile))
+                // New customers start tomorrow so today's delivery run is not changed halfway through.
+                var request = new NewCustomerRequest(
+                    NewCustomerName,
+                    NewCustomerMobile,
+                    NewCustomerAddress,
+                    NewMilkType,
+                    NewQuantity,
+                    SelectedRoute?.Id ?? 0,
+                    DateTime.Today.AddDays(1));
+
+                Customer? customer = null;
+                try
                 {
-                    StatusMessage = "Name and Mobile number are required.";
+                    // Customer and subscription are saved together (and the mobile checked for duplicates) or not at all.
+                    await DbService.RunInTransactionAsync(connection =>
+                        customer = CustomerOnboarding.Add(connection, request));
+                }
+                catch (BusinessRuleException ex)
+                {
+                    ErrorMessage = ex.Message;
                     return;
                 }
-
-                await DbService.InitAsync();
-
-                var customer = new Customer
-                {
-                    Name = NewCustomerName,
-                    Mobile = NewCustomerMobile,
-                    Address = NewCustomerAddress,
-                    PreferredMilkType = NewMilkType,
-                    PreferredQuantity = NewQuantity,
-                    RouteId = 1,
-                    WalletBalance = 500.00m,
-                    IsActive = true,
-                    UpdatedAt = DateTime.UtcNow
-                };
-
-                await DbService.InsertWithSyncAsync(customer);
 
                 NewCustomerName = string.Empty;
                 NewCustomerMobile = string.Empty;
                 NewCustomerAddress = string.Empty;
-                StatusMessage = "Customer added successfully!";
+                StatusMessage = $"{customer!.Name} added. Deliveries start {request.StartDate:dd MMM}; they can log in with {customer.Mobile}.";
 
                 await LoadCustomersAsync();
             });
@@ -192,8 +210,6 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private ObservableCollection<Delivery> _deliveries = new();
 
-        [ObservableProperty]
-        private string _statusMessage = string.Empty;
 
         public VendorDeliveriesViewModel(
                 LocalDbService dbService,
@@ -281,8 +297,6 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private ObservableCollection<Expense> _expenses = new();
 
-        [ObservableProperty]
-        private string _statusMessage = string.Empty;
 
         public ObservableCollection<ExpenseCategory> Categories { get; } = new()
         {

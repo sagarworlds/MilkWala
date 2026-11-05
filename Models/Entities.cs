@@ -237,6 +237,8 @@ namespace MilkWala.Models
         public double SnfPercent { get; set; } = 8.5;
         public decimal RatePerLitre { get; set; }
         public decimal TotalAmount => (decimal)Litres * RatePerLitre;
+        /// <summary>How much of <see cref="TotalAmount"/> has been paid to the farmer so far (payouts settle oldest purchases first).</summary>
+        public decimal AmountPaid { get; set; }
         public bool IsPaid { get; set; } = false;
     }
 

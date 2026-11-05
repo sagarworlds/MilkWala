@@ -21,6 +21,15 @@
                         <Entry Text="{Binding NewCustomerMobile}" Placeholder="Mobile Number" Keyboard="Telephone" MaxLength="10" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
                         <Entry Text="{Binding NewCustomerAddress}" Placeholder="Delivery Address &amp; Flat No" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
 
+                        <Label Text="Daily milk" FontSize="12" TextColor="#475569"/>
+                        <Picker ItemsSource="{Binding AvailableMilkTypes}" SelectedItem="{Binding NewMilkType}" BackgroundColor="#F1F5F9" TextColor="#0F172A"/>
+                        <Label Text="{Binding NewQuantity, StringFormat='Daily quantity: {0:F1} Litres'}" FontSize="12" TextColor="#475569"/>
+                        <Stepper Value="{Binding NewQuantity}" Minimum="0.5" Maximum="10.0" Increment="0.5"/>
+
+                        <Label Text="Delivery route" FontSize="12" TextColor="#475569"/>
+                        <Picker ItemsSource="{Binding Routes}" ItemDisplayBinding="{Binding RouteName}" SelectedItem="{Binding SelectedRoute}" BackgroundColor="#F1F5F9" TextColor="#0F172A"/>
+                        <Label Text="Deliveries start tomorrow. The customer logs in with this mobile number." FontSize="11" TextColor="#94A3B8"/>
+
                         <Button Text="Add Customer to Route" Command="{Binding AddCustomerCommand}" BackgroundColor="#0EA5E9" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
                     </VerticalStackLayout>
                 </Border>

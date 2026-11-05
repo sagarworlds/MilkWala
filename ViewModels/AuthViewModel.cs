@@ -24,8 +24,6 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private UserRole _selectedRole = UserRole.Customer;
 
-        [ObservableProperty]
-        private string _statusMessage = string.Empty;
 
         private readonly MockDataSeeder _seeder;
 

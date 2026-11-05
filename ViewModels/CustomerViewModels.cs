@@ -112,8 +112,6 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private DateTime _vacationEndDate = DateTime.Today.AddDays(7);
 
-        [ObservableProperty]
-        private string _statusMessage = string.Empty;
 
         public ObservableCollection<MilkType> AvailableMilkTypes { get; } = new()
         {
@@ -306,8 +304,6 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private ObservableCollection<WalletTransaction> _transactions = new();
 
-        [ObservableProperty]
-        private string _statusMessage = string.Empty;
 
         public CustomerWalletViewModel(
                 LocalDbService dbService,
@@ -384,8 +380,6 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private string _description = string.Empty;
 
-        [ObservableProperty]
-        private string _statusMessage = string.Empty;
 
         [ObservableProperty]
         private ObservableCollection<Complaint> _complaints = new();
