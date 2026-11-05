@@ -12,18 +12,18 @@
         <ScrollView Grid.Row="1" Padding="16">
             <VerticalStackLayout Spacing="16">
 
-                <Label Text="Monthly Business Summary" FontSize="18" FontAttributes="Bold" TextColor="#0F172A"/>
+                <Label Text="{Binding ReportMonthLabel}" FontSize="18" FontAttributes="Bold" TextColor="#0F172A"/>
 
                 <!-- Net Profit Hero Banner -->
                 <Border StrokeShape="RoundRectangle 16" BackgroundColor="#0F172A" Padding="20" StrokeThickness="0">
                     <VerticalStackLayout Spacing="6">
-                        <Label Text="Net Profit (Sales - Expenses)" FontSize="13" TextColor="#94A3B8"/>
+                        <Label Text="Net Profit (Sales - Expenses - Milk Purchases)" FontSize="13" TextColor="#94A3B8"/>
                         <Label Text="{Binding NetProfit, Converter={StaticResource CurrencyFormatConverter}}" FontSize="32" FontAttributes="Bold" TextColor="#10B981"/>
                     </VerticalStackLayout>
                 </Border>
 
                 <!-- Detailed Financial Cards -->
-                <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto" RowSpacing="12" ColumnSpacing="12">
+                <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto, Auto" RowSpacing="12" ColumnSpacing="12">
                     <Border Grid.Row="0" Grid.Column="0" StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
                         <VerticalStackLayout Spacing="4">
                             <Label Text="Total Sales Revenue" FontSize="11" TextColor="#64748B"/>
@@ -49,6 +49,13 @@
                         <VerticalStackLayout Spacing="4">
                             <Label Text="Total Business Expenses" FontSize="11" TextColor="#64748B"/>
                             <Label Text="{Binding TotalExpenses, Converter={StaticResource CurrencyFormatConverter}}" FontSize="18" FontAttributes="Bold" TextColor="#EF4444"/>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Grid.Row="2" Grid.Column="0" StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Farmer Milk Purchases" FontSize="11" TextColor="#64748B"/>
+                            <Label Text="{Binding TotalProcurementCost, Converter={StaticResource CurrencyFormatConverter}}" FontSize="18" FontAttributes="Bold" TextColor="#F59E0B"/>
                         </VerticalStackLayout>
                     </Border>
                 </Grid>

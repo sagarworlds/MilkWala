@@ -72,6 +72,11 @@ namespace MilkWala.ViewModels
             IsBusy = false;
         }
 
+        // Keep the on-screen rate/total preview live while the vendor edits the inputs.
+        partial void OnFatPercentChanged(double value) => CalculateRate();
+
+        partial void OnLitresProcuredChanged(double value) => CalculateRate();
+
         public void CalculateRate()
         {
             // Standard Fat formula: Base Rate ₹35 + (Fat% * ₹2.0)

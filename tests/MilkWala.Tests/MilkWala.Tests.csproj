@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		Plain net10.0 test project. The MAUI app targets platform TFMs (net10.0-android, ...) that a plain
+		net10.0 project cannot reference, so the platform-independent sources are linked in directly.
+		Anything added to the linked folders must therefore stay free of MAUI/UI dependencies.
+	-->
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<IsPackable>false</IsPackable>
+		<IsTestProject>true</IsTestProject>
+		<RootNamespace>MilkWala.Tests</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Include="..\..\Models\*.cs" Link="Linked\Models\%(Filename)%(Extension)" />
+		<Compile Include="..\..\Helpers\*.cs" Link="Linked\Helpers\%(Filename)%(Extension)" />
+		<Compile Include="..\..\Services\Reporting\*.cs" Link="Linked\Reporting\%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.8.0" />
+		<PackageReference Include="xunit" Version="2.9.3" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
+		<!-- Entities carry sqlite-net attributes; same version as the app. -->
+		<PackageReference Include="sqlite-net-pcl" Version="1.11.285" />
+	</ItemGroup>
+
+</Project>

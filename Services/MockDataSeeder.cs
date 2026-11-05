@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using MilkWala.Helpers;
 using MilkWala.Models;
 
 namespace MilkWala.Services
@@ -8,13 +10,37 @@ namespace MilkWala.Services
     public class MockDataSeeder
     {
         private readonly LocalDbService _dbService;
+        private readonly ILogger<MockDataSeeder> _logger;
+        private readonly SingleFlightInitializer _initializer;
 
-        public MockDataSeeder(LocalDbService dbService)
+        public MockDataSeeder(LocalDbService dbService, ILogger<MockDataSeeder> logger)
         {
             _dbService = dbService;
+            _logger = logger;
+            _initializer = new SingleFlightInitializer(SeedCoreAsync);
         }
 
-        public async Task SeedAsync()
+        /// <summary>
+        /// Seeds the demo data once. The app starts this in the background and the login flow awaits it, so
+        /// no screen can read the database before seeding has finished and both callers share a single run.
+        /// </summary>
+        /// <exception cref="Exception">Rethrows the underlying database error after logging it; a later call retries.</exception>
+        public Task EnsureSeededAsync() => _initializer.EnsureAsync();
+
+        private async Task SeedCoreAsync()
+        {
+            try
+            {
+                await SeedAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Seeding demo data failed");
+                throw;
+            }
+        }
+
+        private async Task SeedAsync()
         {
             await _dbService.InitAsync();
 

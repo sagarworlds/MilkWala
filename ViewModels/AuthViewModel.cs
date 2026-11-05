@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using MilkWala.Models;
 using MilkWala.Services;
 using Microsoft.Maui.Controls;
@@ -25,9 +26,19 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private string _statusMessage = string.Empty;
 
-        public AuthViewModel(LocalDbService dbService, SyncEngineService syncEngine, LocalizationService localization)
+        private readonly MockDataSeeder _seeder;
+        private readonly ILogger<AuthViewModel> _logger;
+
+        public AuthViewModel(
+            LocalDbService dbService,
+            SyncEngineService syncEngine,
+            LocalizationService localization,
+            MockDataSeeder seeder,
+            ILogger<AuthViewModel> logger)
             : base(dbService, syncEngine, localization)
         {
+            _seeder = seeder;
+            _logger = logger;
             Title = "Login to MilkWala";
         }
 
@@ -56,19 +67,31 @@ namespace MilkWala.ViewModels
             }
 
             IsBusy = true;
-            await DbService.InitAsync();
-
-            // Set current active role preference
-            Preferences.Default.Set("ActiveRole", SelectedRole.ToString());
-            Preferences.Default.Set("UserMobile", MobileNumber);
-
-            StatusMessage = "Login Successful!";
-            IsBusy = false;
-
-            // Navigate to main application dynamic Shell tabs
-            if (Application.Current?.Windows.Count > 0)
+            try
             {
-                Application.Current.Windows[0].Page = new AppShell();
+                // Seeding runs in the background from app start; wait for it so the first page never reads an empty database.
+                await _seeder.EnsureSeededAsync();
+
+                // Set current active role preference
+                Preferences.Default.Set("ActiveRole", SelectedRole.ToString());
+                Preferences.Default.Set("UserMobile", MobileNumber);
+
+                StatusMessage = "Login Successful!";
+
+                // Navigate to main application dynamic Shell tabs
+                if (Application.Current?.Windows.Count > 0)
+                {
+                    Application.Current.Windows[0].Page = new AppShell();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Login failed while preparing local data for role {Role}", SelectedRole);
+                StatusMessage = "Could not prepare local data. Please try again or restart the app.";
+            }
+            finally
+            {
+                IsBusy = false;
             }
         }
 

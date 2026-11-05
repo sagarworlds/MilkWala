@@ -31,7 +31,14 @@
                                         </Border>
                                     </Grid>
 
-                                    <Label Text="{Binding QuantityLitres, StringFormat='Required: {0} Litres ({1})', Source={RelativeSource Self}}" FontSize="13" TextColor="#0EA5E9" FontAttributes="Bold"/>
+                                    <Label FontSize="13" TextColor="#0EA5E9" FontAttributes="Bold">
+                                        <Label.Text>
+                                            <MultiBinding StringFormat="Required: {0} Litres ({1})">
+                                                <Binding Path="QuantityLitres"/>
+                                                <Binding Path="MilkType"/>
+                                            </MultiBinding>
+                                        </Label.Text>
+                                    </Label>
 
                                     <Grid ColumnDefinitions="*, *" ColumnSpacing="8">
                                         <Button Grid.Column="0" Text="✓ Mark Delivered"

@@ -6,6 +6,7 @@
 [![MVVM](https://img.shields.io/badge/MVVM-CommunityToolkit-0078D4?style=for-the-badge)](https://learn.microsoft.com/en-us/dotnet/communitytoolkit/mvvm/)
 [![Architecture](https://img.shields.io/badge/Architecture-Offline--First-10B981?style=for-the-badge)]()
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
+[![CI](https://github.com/sagarworlds/MilkWala/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/sagarworlds/MilkWala/actions/workflows/ci.yml)
 
 **MilkWala** is a modern, cross-platform mobile application built using **.NET 10 MAUI**, **SQLite**, **CommunityToolkit.Mvvm**, and an **Offline-First Architecture**. It seamlessly connects Milk Vendors, Delivery Staff, and Customers to automate daily milk subscriptions, delivery tracking, wallet payments, procurement, and inventory management—even in areas with limited or no internet connectivity.
 
@@ -109,6 +110,16 @@ MilkWala/
    ```bash
    dotnet run MilkWala.csproj -f net10.0-windows10.0.19041.0
    ```
+
+### Run the tests
+
+The platform-independent logic (reporting maths, helpers) is covered by a plain `net10.0` xUnit project:
+
+```bash
+dotnet test tests/MilkWala.Tests/MilkWala.Tests.csproj
+```
+
+CI runs these tests and an Android build of the app on every pull request.
 
 ---
 

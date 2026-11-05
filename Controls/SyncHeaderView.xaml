@@ -15,7 +15,7 @@
                 <HorizontalStackLayout Spacing="8" Margin="0,4,0,0">
                     <Border StrokeShape="RoundRectangle 12"
                             Padding="8,3"
-                            BackgroundColor="{Binding IsOnline, Converter={StaticResource StatusToColorConverter}}">
+                            BackgroundColor="{Binding IsOnline, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#10B981|#EF4444'}">
                         <Label Text="{Binding SyncStatusText}"
                                FontSize="11"
                                TextColor="White"
@@ -25,7 +25,7 @@
             </StackLayout>
 
             <Button Grid.Column="1"
-                    Text="{Binding IsOnline, StringFormat='Simulate {0:Offline;0;Offline}'}"
+                    Text="{Binding IsOnline, Converter={StaticResource BoolToTextConverter}, ConverterParameter='Simulate Offline|Simulate Online'}"
                     Command="{Binding ToggleSyncCommand}"
                     BackgroundColor="#1E293B"
                     TextColor="#38BDF8"
