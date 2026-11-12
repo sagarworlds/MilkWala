@@ -13,6 +13,11 @@ namespace MilkWala.Views.Vendor
             BindingContext = _vm = viewModel;
         }
 
+        private async void OnManageRoutesClicked(object? sender, EventArgs e)
+        {
+            await Shell.Current.GoToAsync("routes");
+        }
+
         protected override async void OnAppearing()
         {
             base.OnAppearing();

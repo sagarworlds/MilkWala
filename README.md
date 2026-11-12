@@ -28,11 +28,12 @@
 - **Delivery Management**: Daily delivery checklist with 1-tap `Delivered` / `Skipped` marking and GPS/proof options.
 - **Farmer Procurement & Fat% Ledger**: Log raw milk purchases from farmers, test **Fat %** and **SNF %**, calculate rates automatically (`Base ₹35 + Fat% * ₹2.0`), add farmers, and pay them (oldest purchases are settled first).
 - **Inventory & Expense Manager**: Track morning/evening stock balance against distributed milk, and record operational expenses (Fuel, Salary, Packaging, Maintenance).
+- **Routes & Delivery Staff**: Add routes, add delivery people (they sign in with their mobile number and the Delivery role), change who delivers a route, and move customers between routes. A route that still has customers cannot be deleted.
 - **Complaint Desk**: See every customer complaint, start work, and close it with a written answer (or reopen it).
 - **Analytics & Financial Reports**: Total sales revenue, litres sold, cash/UPI collections, net profit metrics, and a "milk needed tomorrow" forecast.
 
 ### 🚴 Delivery Staff Module
-- **Assigned Route Execution**: Delivery staff see only the routes assigned to them (today's deliveries for the customers on those routes) and mark each delivered or skipped with one tap, offline. Routes are assigned in the data for now; there is no screen to create routes or assign staff yet.
+- **Assigned Route Execution**: Delivery staff see only the routes assigned to them (today's deliveries for the customers on those routes) and mark each delivered or skipped with one tap, offline. The vendor creates routes, adds delivery staff and assigns them from the Customers tab ("Manage routes & delivery staff").
 
 ### ⚡ Offline-First & Sync Engine
 - **Local SQLite Engine**: All C.R.U.D operations execute instantly (<500ms) against a local SQLite database (`MilkWala_v1.db`).

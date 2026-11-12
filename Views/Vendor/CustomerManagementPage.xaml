@@ -12,6 +12,9 @@
         <ScrollView Grid.Row="1" Padding="16">
             <VerticalStackLayout Spacing="16">
 
+                <Button Text="Manage routes &amp; delivery staff" Clicked="OnManageRoutesClicked"
+                        BackgroundColor="#0F172A" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
+
                 <!-- Add New Customer Card -->
                 <Border StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
                     <VerticalStackLayout Spacing="12">
