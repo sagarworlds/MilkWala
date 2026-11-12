@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using MilkWala.Models;
 using MilkWala.Services;
 using MilkWala.Services.Data;
+using MilkWala.Services.Identity;
 using MilkWala.Services.Scheduling;
 
 namespace MilkWala.ViewModels
@@ -15,9 +16,10 @@ namespace MilkWala.ViewModels
     public partial class DeliveryBoyViewModel : BaseViewModel
     {
         private readonly IDeliveryScheduleService _deliveryScheduler;
+        private readonly ICurrentUserService _currentUser;
 
         [ObservableProperty]
-        private string _assignedRouteName = "Route A - Model Town & Green Park";
+        private string _assignedRouteName = "Loading route...";
 
         [ObservableProperty]
         private int _totalPendingDeliveries;
@@ -34,10 +36,12 @@ namespace MilkWala.ViewModels
                 SyncEngineService syncEngine,
                 LocalizationService localization,
                 ILoggerFactory loggerFactory,
-                IDeliveryScheduleService deliveryScheduler)
+                IDeliveryScheduleService deliveryScheduler,
+                ICurrentUserService currentUser)
             : base(dbService, syncEngine, localization, loggerFactory)
         {
             _deliveryScheduler = deliveryScheduler;
+            _currentUser = currentUser;
             Title = "Delivery Staff Module";
         }
 
@@ -47,18 +51,50 @@ namespace MilkWala.ViewModels
             await RunSafeAsync(async () =>
             {
                 await DbService.InitAsync();
+
+                var user = await _currentUser.GetCurrentUserAsync();
+                if (user == null || user.Role != UserRole.DeliveryBoy)
+                {
+                    ShowNothing("No delivery staff account was found for the signed-in mobile number.", "No route");
+                    return;
+                }
+
+                var routes = RouteAssignment.RoutesFor(user.Id, await DbService.GetAllAsync<DeliveryRoute>());
+                if (routes.Count == 0)
+                {
+                    StatusMessage = "No route is assigned to you yet. Ask the vendor to assign one.";
+                    ShowNothing(null, "No route assigned");
+                    return;
+                }
+
                 await _deliveryScheduler.EnsureDeliveriesAsync(DateTime.Today);
 
-                var deliveries = await DbService.GetTodayDeliveriesAsync(DateTime.Today);
+                // Only this person's own run, not every delivery in the dairy.
+                var todays = await DbService.GetTodayDeliveriesAsync(DateTime.Today);
+                var customers = await DbService.GetAllAsync<Customer>();
+                var mine = RouteAssignment.DeliveriesOnRoutes(todays, customers, routes);
+
+                AssignedRouteName = string.Join(" + ", routes.Select(r => r.RouteName));
                 RouteDeliveries.Clear();
-                foreach (var d in deliveries)
+                foreach (var d in mine)
                 {
                     RouteDeliveries.Add(d);
                 }
 
-                CompletedDeliveries = deliveries.Count(d => d.Status == DeliveryStatus.Delivered || d.Status == DeliveryStatus.Skipped || d.Status == DeliveryStatus.Extra);
-                TotalPendingDeliveries = deliveries.Count(d => d.Status == DeliveryStatus.Pending);
+                CompletedDeliveries = mine.Count(d => d.Status == DeliveryStatus.Delivered || d.Status == DeliveryStatus.Skipped || d.Status == DeliveryStatus.Extra);
+                TotalPendingDeliveries = mine.Count(d => d.Status == DeliveryStatus.Pending);
             });
+        }
+
+        /// <summary>Empties the list and counters, optionally with an error, so a stale run is never left on screen.</summary>
+        private void ShowNothing(string? error, string routeLabel)
+        {
+            if (error != null)
+                ErrorMessage = error;
+            AssignedRouteName = routeLabel;
+            RouteDeliveries.Clear();
+            CompletedDeliveries = 0;
+            TotalPendingDeliveries = 0;
         }
 
         [RelayCommand]

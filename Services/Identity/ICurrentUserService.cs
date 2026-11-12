@@ -8,6 +8,10 @@ namespace MilkWala.Services.Identity
         /// <summary>The role chosen at login, or null when nobody is signed in.</summary>
         UserRole? Role { get; }
 
+        /// <summary>The signed-in user's account for the role they chose.</summary>
+        /// <returns>The account, or null when nobody is signed in or no active account has that mobile number and role.</returns>
+        Task<User?> GetCurrentUserAsync();
+
         /// <summary>
         /// The customer profile of the signed-in user.
         /// </summary>
