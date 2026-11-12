@@ -87,6 +87,8 @@ namespace MilkWala.ViewModels
 
     public partial class VendorCustomersViewModel : BaseViewModel
     {
+        private readonly IStatementService _statements;
+
         [ObservableProperty]
         private ObservableCollection<Customer> _customerList = new();
 
@@ -121,9 +123,11 @@ namespace MilkWala.ViewModels
                 LocalDbService dbService,
                 SyncEngineService syncEngine,
                 LocalizationService localization,
-                ILoggerFactory loggerFactory)
+                ILoggerFactory loggerFactory,
+                IStatementService statements)
             : base(dbService, syncEngine, localization, loggerFactory)
         {
+            _statements = statements;
             Title = "Customer Management";
         }
 
@@ -185,6 +189,34 @@ namespace MilkWala.ViewModels
                 StatusMessage = $"{customer!.Name} added. Deliveries start {request.StartDate:dd MMM}; they can log in with {customer.Mobile}.";
 
                 await LoadCustomersAsync();
+            });
+        }
+
+        [RelayCommand]
+        public async Task ShareStatementAsync(Customer customer)
+        {
+            await RunSafeAsync(async () =>
+            {
+                if (customer == null) return;
+
+                var month = DateTime.Today;
+                var deliveries = await DbService.GetCustomerDeliveriesAsync(customer.Id, month);
+
+                bool opened;
+                try
+                {
+                    opened = await _statements.ShareOnWhatsAppAsync(customer, deliveries, month);
+                }
+                catch (BusinessRuleException ex)
+                {
+                    ErrorMessage = ex.Message;
+                    return;
+                }
+
+                if (opened)
+                    StatusMessage = $"{month:MMMM} statement for {customer.Name} opened in WhatsApp.";
+                else
+                    ErrorMessage = "WhatsApp could not be opened on this device. Is it installed?";
             });
         }
 
@@ -371,6 +403,8 @@ namespace MilkWala.ViewModels
 
     public partial class VendorReportsViewModel : BaseViewModel
     {
+        private readonly IDemandForecastService _demandForecast;
+
         [ObservableProperty]
         private decimal _totalSales;
 
@@ -390,15 +424,26 @@ namespace MilkWala.ViewModels
         private string _reportMonthLabel = string.Empty;
 
         [ObservableProperty]
+        private ObservableCollection<DemandForecastResult> _tomorrowDemand = new();
+
+        [ObservableProperty]
+        private double _tomorrowTotalLitres;
+
+        [ObservableProperty]
+        private string _tomorrowLabel = string.Empty;
+
+        [ObservableProperty]
         private double _totalLitresSold;
 
         public VendorReportsViewModel(
                 LocalDbService dbService,
                 SyncEngineService syncEngine,
                 LocalizationService localization,
-                ILoggerFactory loggerFactory)
+                ILoggerFactory loggerFactory,
+                IDemandForecastService demandForecast)
             : base(dbService, syncEngine, localization, loggerFactory)
         {
+            _demandForecast = demandForecast;
             Title = "Reports & Analytics";
         }
 
@@ -425,6 +470,16 @@ namespace MilkWala.ViewModels
                 TotalExpenses = report.TotalExpenses;
                 TotalProcurementCost = report.TotalProcurementCost;
                 NetProfit = report.NetProfit;
+
+            // What to have ready tomorrow: the same rules as delivery generation, so it matches the delivery list.
+            var forecast = await _demandForecast.ForecastTomorrowDemandAsync();
+            TomorrowLabel = $"Milk needed tomorrow ({DateTime.Today.AddDays(1):ddd dd MMM})";
+            TomorrowDemand.Clear();
+            foreach (var row in forecast.Where(r => r.SubscribedLitres > 0 || r.SpecialOrderExtraLitres > 0))
+            {
+                TomorrowDemand.Add(row);
+            }
+            TomorrowTotalLitres = forecast.Sum(r => r.PredictedRequiredLitres);
             });
         }
     }

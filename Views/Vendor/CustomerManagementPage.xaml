@@ -56,11 +56,17 @@
                                         </Label>
                                     </VerticalStackLayout>
 
-                                    <Button Grid.Column="1" Text="{Binding IsActive, Converter={StaticResource BoolToTextConverter}, ConverterParameter='Active|Inactive'}"
-                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ToggleStatusCommand}"
-                                            CommandParameter="{Binding .}"
-                                            BackgroundColor="{Binding IsActive, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#10B981|#6B7280'}"
-                                            TextColor="White" FontSize="11" CornerRadius="8" HeightRequest="36" VerticalOptions="Center"/>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
+                                        <Button Text="{Binding IsActive, Converter={StaticResource BoolToTextConverter}, ConverterParameter='Active|Inactive'}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ToggleStatusCommand}"
+                                                CommandParameter="{Binding .}"
+                                                BackgroundColor="{Binding IsActive, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#10B981|#6B7280'}"
+                                                TextColor="White" FontSize="11" CornerRadius="8" HeightRequest="36"/>
+                                        <Button Text="Statement"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ShareStatementCommand}"
+                                                CommandParameter="{Binding .}"
+                                                BackgroundColor="#25D366" TextColor="White" FontSize="11" CornerRadius="8" HeightRequest="36"/>
+                                    </VerticalStackLayout>
                                 </Grid>
                             </Border>
                         </DataTemplate>

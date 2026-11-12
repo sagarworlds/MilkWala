@@ -55,6 +55,9 @@
         <Tab Title="Reports" Icon="icon_reports.svg">
             <ShellContent ContentTemplate="{DataTemplate vendor:VendorReportsPage}" />
         </Tab>
+        <Tab Title="Backup" Icon="icon_inventory.svg">
+            <ShellContent ContentTemplate="{DataTemplate vendor:BackupPage}" />
+        </Tab>
     </TabBar>
 
     <!-- Delivery Boy Role TabBar -->
