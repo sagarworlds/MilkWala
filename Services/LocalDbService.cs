@@ -16,13 +16,57 @@ namespace MilkWala.Services
         private SQLiteAsyncConnection? _db;
         private readonly string _dbPath;
         private readonly ILogger<LocalDbService> _logger;
-        private readonly SingleFlightInitializer _initializer;
+        private SingleFlightInitializer _initializer;
 
         public LocalDbService(ILogger<LocalDbService> logger)
         {
             _logger = logger;
             _dbPath = Path.Combine(FileSystem.AppDataDirectory, "MilkWala_v1.db");
             _initializer = new SingleFlightInitializer(InitializeCoreAsync);
+        }
+
+        /// <summary>Folder where backups are written.</summary>
+        public string BackupFolder => Path.Combine(FileSystem.AppDataDirectory, "Backups");
+
+        /// <summary>
+        /// Replaces the live database with the file at <paramref name="sourcePath"/> (a validated backup): closes the
+        /// connection, copies the file over, then reopens and migrates it. The connection is always reopened, even if
+        /// the copy fails, so the app is never left without a database.
+        /// </summary>
+        /// <exception cref="IOException">The file could not be copied; the previous database stays in place.</exception>
+        public async Task ReplaceDatabaseFileAsync(string sourcePath)
+        {
+            await InitAsync();
+
+            var old = _db;
+            _db = null;
+            try
+            {
+                if (old != null)
+                    await old.CloseAsync();
+
+                // Stale side files from the old database would be applied to the restored one.
+                foreach (var suffix in new[] { "-journal", "-wal", "-shm" })
+                {
+                    var side = _dbPath + suffix;
+                    if (File.Exists(side))
+                        File.Delete(side);
+                }
+
+                File.Copy(sourcePath, _dbPath, overwrite: true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Restoring the database from {BackupPath} failed", sourcePath);
+                throw;
+            }
+            finally
+            {
+                // Start a fresh single-flight so the next InitAsync reopens the file and adds any columns
+                // a backup from an older version lacks.
+                _initializer = new SingleFlightInitializer(InitializeCoreAsync);
+                await InitAsync();
+            }
         }
 
         /// <summary>

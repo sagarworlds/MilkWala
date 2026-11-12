@@ -31,9 +31,9 @@ namespace MilkWala
             builder.Services.AddSingleton<LocalDbService>();
             builder.Services.AddSingleton<SyncEngineService>();
             builder.Services.AddSingleton<LocalizationService>();
-            builder.Services.AddSingleton<InvoiceService>();
-            builder.Services.AddSingleton<DemandForecastService>();
-            builder.Services.AddSingleton<BackupService>();
+            builder.Services.AddSingleton<IStatementService, InvoiceService>();
+            builder.Services.AddSingleton<IDemandForecastService, DemandForecastService>();
+            builder.Services.AddSingleton<IBackupService, BackupService>();
             builder.Services.AddSingleton<MockDataSeeder>();
             builder.Services.AddSingleton<IPreferences>(Preferences.Default);
             builder.Services.AddSingleton<ICurrentUserService, CurrentUserService>();
@@ -54,6 +54,7 @@ namespace MilkWala
             builder.Services.AddTransient<VendorProcurementViewModel>();
             builder.Services.AddTransient<VendorReportsViewModel>();
             builder.Services.AddTransient<VendorComplaintsViewModel>();
+            builder.Services.AddTransient<VendorBackupViewModel>();
             builder.Services.AddTransient<DeliveryBoyViewModel>();
 
             // 3. Views
@@ -71,6 +72,7 @@ namespace MilkWala
             builder.Services.AddTransient<ProcurementPage>();
             builder.Services.AddTransient<VendorReportsPage>();
             builder.Services.AddTransient<ComplaintManagementPage>();
+            builder.Services.AddTransient<BackupPage>();
             builder.Services.AddTransient<DeliveryBoyPage>();
 
             var app = builder.Build();

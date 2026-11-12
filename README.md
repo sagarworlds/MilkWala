@@ -29,7 +29,7 @@
 - **Farmer Procurement & Fat% Ledger**: Log raw milk purchases from farmers, test **Fat %** and **SNF %**, calculate rates automatically (`Base ₹35 + Fat% * ₹2.0`), add farmers, and pay them (oldest purchases are settled first).
 - **Inventory & Expense Manager**: Track morning/evening stock balance against distributed milk, and record operational expenses (Fuel, Salary, Packaging, Maintenance).
 - **Complaint Desk**: See every customer complaint, start work, and close it with a written answer (or reopen it).
-- **Analytics & Financial Reports**: Total sales revenue, litres sold, cash/UPI collections, net profit metrics, and AI-powered demand forecasting.
+- **Analytics & Financial Reports**: Total sales revenue, litres sold, cash/UPI collections, net profit metrics, and a "milk needed tomorrow" forecast.
 
 ### 🚴 Delivery Staff Module
 - **Assigned Route Execution**: View assigned route sequence, customer house list, 1-tap delivery status marking operating 100% offline.
@@ -40,10 +40,10 @@
 - **Sync Header Bar**: Live online/offline status bar with an interactive network simulation toggle.
 
 ### 🛠️ Extra Business Utilities
-- **WhatsApp Monthly Invoices**: 1-click monthly PDF statement generator with direct WhatsApp share links.
-- **AI Demand Forecasting**: Predicts exact litres of each milk type needed for tomorrow based on active subscriptions, vacation holds, and special orders.
-- **SQLite Local Backup & Restore**: 1-click timestamped database snapshot export and restore.
-- **Multi-Language Support**: Built-in dynamic translation for **English**, **Marathi (मराठी)**, and **Hindi (हिंदी)**.
+- **WhatsApp Monthly Statements**: From the customer directory, open a ready-typed monthly statement (each delivery, totals, wallet and dues) in WhatsApp. It is plain text, not a PDF.
+- **Demand Forecast**: Litres of each milk type to have ready tomorrow, counted with the same rules as delivery generation (active customers, alternate-day plans, vacation holds, approved extra orders). It is a rule-based count, not a prediction model.
+- **Backup & Restore** (vendor): Create a consistent snapshot of all data while the app is running, share it off the phone, and restore it later. Restoring checks the file first and saves the current data as a pre-restore backup so it can be undone.
+- **Languages** *(in progress)*: `LocalizationService` holds English, Marathi (मराठी) and Hindi (हिंदी) strings, but the screens are not translated yet and there is no language picker.
 
 ---
 
@@ -59,9 +59,9 @@ MilkWala/
 ├── Services/               # Core Application & Data Services
 │   ├── LocalDbService.cs   # SQLite Connection & Table Operations
 │   ├── SyncEngineService.cs# Offline Mutation Queue Worker
-│   ├── InvoiceService.cs   # WhatsApp Invoice & Statement Generator
-│   ├── DemandForecastService.cs # AI Stock Requirement Predictor
-│   ├── BackupService.cs    # Local SQLite DB Snapshot Backup & Restore
+│   ├── InvoiceService.cs   # Opens a customer's monthly statement in WhatsApp
+│   ├── DemandForecastService.cs # Tomorrow's milk requirement
+│   ├── BackupService.cs    # Database snapshot, share and safe restore
 │   ├── MockDataSeeder.cs   # Sample Data Generator
 │   └── LocalizationService.cs # English, Marathi, Hindi Translations
 ├── ViewModels/             # ViewModel Layer (CommunityToolkit.Mvvm)

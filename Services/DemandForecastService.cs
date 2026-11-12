@@ -1,22 +1,16 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using MilkWala.Models;
-using MilkWala.Services.Scheduling;
+using MilkWala.Services.Reporting;
 
 namespace MilkWala.Services
 {
-    public class DemandForecastResult
+    /// <summary>Tells the vendor how much milk to have ready for a day.</summary>
+    public interface IDemandForecastService
     {
-        public MilkType MilkType { get; set; }
-        public double SubscribedLitres { get; set; }
-        public double VacationPausedLitres { get; set; }
-        public double SpecialOrderExtraLitres { get; set; }
-        public double PredictedRequiredLitres => Math.Max(0, (SubscribedLitres - VacationPausedLitres) + SpecialOrderExtraLitres);
+        /// <summary>Milk to have ready tomorrow, one entry per milk type.</summary>
+        Task<IReadOnlyList<DemandForecastResult>> ForecastTomorrowDemandAsync();
     }
 
-    public class DemandForecastService
+    public class DemandForecastService : IDemandForecastService
     {
         private readonly LocalDbService _dbService;
 
@@ -25,40 +19,15 @@ namespace MilkWala.Services
             _dbService = dbService;
         }
 
-        public async Task<List<DemandForecastResult>> ForecastTomorrowDemandAsync()
+        public async Task<IReadOnlyList<DemandForecastResult>> ForecastTomorrowDemandAsync()
         {
             await _dbService.InitAsync();
 
-            var targetDate = DateTime.Today.AddDays(1);
-            var subscriptions = await _dbService.GetAllAsync<Subscription>();
-            var specialOrders = await _dbService.GetAllAsync<SpecialOrder>();
-
-            var forecastList = new List<DemandForecastResult>();
-
-            foreach (MilkType milkType in Enum.GetValues(typeof(MilkType)))
-            {
-                // Only plans that deliver tomorrow (e.g. not the off day of an alternate-day plan).
-                var typeSubs = subscriptions
-                    .Where(s => s.MilkType == milkType && SubscriptionRules.IsDueOn(s, targetDate))
-                    .ToList();
-
-                double totalSub = typeSubs.Sum(s => s.QuantityLitres);
-                double pausedSub = typeSubs.Where(s => SubscriptionRules.IsPausedOn(s, targetDate)).Sum(s => s.QuantityLitres);
-
-                double extraOrders = specialOrders
-                    .Where(o => o.MilkType == milkType && o.TargetDate.Date == targetDate.Date && o.IsApproved)
-                    .Sum(o => o.ExtraQuantityLitres);
-
-                forecastList.Add(new DemandForecastResult
-                {
-                    MilkType = milkType,
-                    SubscribedLitres = totalSub,
-                    VacationPausedLitres = pausedSub,
-                    SpecialOrderExtraLitres = extraOrders
-                });
-            }
-
-            return forecastList;
+            return DemandForecaster.Forecast(
+                DateTime.Today.AddDays(1),
+                await _dbService.GetAllAsync<Subscription>(),
+                await _dbService.GetAllAsync<Customer>(),
+                await _dbService.GetAllAsync<SpecialOrder>());
         }
     }
 }

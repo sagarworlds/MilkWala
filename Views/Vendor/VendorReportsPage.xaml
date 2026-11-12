@@ -60,6 +60,40 @@
                     </Border>
                 </Grid>
 
+                <!-- Tomorrow's milk: what to have ready -->
+                <Label Text="{Binding TomorrowLabel}" FontSize="18" FontAttributes="Bold" TextColor="#0F172A" Margin="0,8,0,0"/>
+                <Border StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
+                    <VerticalStackLayout Spacing="10">
+                        <CollectionView ItemsSource="{Binding TomorrowDemand}">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnDefinitions="*, Auto" Padding="0,4">
+                                        <VerticalStackLayout Grid.Column="0">
+                                            <Label Text="{Binding MilkType}" FontSize="14" FontAttributes="Bold" TextColor="#0F172A"/>
+                                            <Label FontSize="11" TextColor="#64748B">
+                                                <Label.Text>
+                                                    <MultiBinding StringFormat="Subscribed {0:F1} L • On hold {1:F1} L • Extra {2:F1} L">
+                                                        <Binding Path="SubscribedLitres"/>
+                                                        <Binding Path="VacationPausedLitres"/>
+                                                        <Binding Path="SpecialOrderExtraLitres"/>
+                                                    </MultiBinding>
+                                                </Label.Text>
+                                            </Label>
+                                        </VerticalStackLayout>
+                                        <Label Grid.Column="1" Text="{Binding PredictedRequiredLitres, StringFormat='{0:F1} L'}"
+                                               FontSize="16" FontAttributes="Bold" TextColor="#0EA5E9" VerticalOptions="Center"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                        <BoxView HeightRequest="1" Color="#E2E8F0"/>
+                        <Grid ColumnDefinitions="*, Auto">
+                            <Label Text="Total to have ready" FontSize="13" TextColor="#475569"/>
+                            <Label Grid.Column="1" Text="{Binding TomorrowTotalLitres, StringFormat='{0:F1} L'}" FontSize="18" FontAttributes="Bold" TextColor="#10B981"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
             </VerticalStackLayout>
         </ScrollView>
     </Grid>
