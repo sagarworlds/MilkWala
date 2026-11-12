@@ -32,7 +32,7 @@
 - **Analytics & Financial Reports**: Total sales revenue, litres sold, cash/UPI collections, net profit metrics, and a "milk needed tomorrow" forecast.
 
 ### 🚴 Delivery Staff Module
-- **Assigned Route Execution**: View assigned route sequence, customer house list, 1-tap delivery status marking operating 100% offline.
+- **Assigned Route Execution**: Delivery staff see only the routes assigned to them (today's deliveries for the customers on those routes) and mark each delivered or skipped with one tap, offline. Routes are assigned in the data for now; there is no screen to create routes or assign staff yet.
 
 ### ⚡ Offline-First & Sync Engine
 - **Local SQLite Engine**: All C.R.U.D operations execute instantly (<500ms) against a local SQLite database (`MilkWala_v1.db`).

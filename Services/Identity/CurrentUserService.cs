@@ -18,6 +18,15 @@ namespace MilkWala.Services.Identity
         public UserRole? Role =>
             Enum.TryParse<UserRole>(_preferences.Get(SessionKeys.ActiveRole, string.Empty), out var role) ? role : null;
 
+        public async Task<User?> GetCurrentUserAsync()
+        {
+            if (Role is not UserRole role)
+                return null;
+
+            var users = await _db.GetAllAsync<User>();
+            return UserLookup.Find(_preferences.Get(SessionKeys.UserMobile, string.Empty), role, users);
+        }
+
         public async Task<Customer?> GetCurrentCustomerAsync()
         {
             if (Role != UserRole.Customer)
