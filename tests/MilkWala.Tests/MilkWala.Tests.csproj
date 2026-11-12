@@ -26,6 +26,7 @@
 		<Compile Include="..\..\Services\Identity\CustomerLookup.cs" Link="Linked\Identity\CustomerLookup.cs" />
 		<Compile Include="..\..\Services\Identity\UserLookup.cs" Link="Linked\Identity\UserLookup.cs" />
 		<Compile Include="..\..\Services\Identity\RouteAssignment.cs" Link="Linked\Identity\RouteAssignment.cs" />
+		<Compile Include="..\..\Services\Identity\RouteSummaries.cs" Link="Linked\Identity\RouteSummaries.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

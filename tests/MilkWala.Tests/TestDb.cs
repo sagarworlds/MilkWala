@@ -22,6 +22,7 @@ internal sealed class TestDb : IDisposable
         Connection.CreateTable<Payment>();
         Connection.CreateTable<Complaint>();
         Connection.CreateTable<DeliveryRoute>();
+        Connection.CreateTable<User>();
     }
 
     public Delivery AddDelivery(Customer customer, double litres, decimal rate, DeliveryStatus status = DeliveryStatus.Pending, DateTime? date = null)
@@ -38,6 +39,13 @@ internal sealed class TestDb : IDisposable
         };
         Connection.Insert(delivery);
         return delivery;
+    }
+
+    public User AddUser(string name, UserRole role = UserRole.DeliveryBoy, string mobile = "9123456789", bool active = true)
+    {
+        var user = new User { Name = name, Role = role, MobileNumber = mobile, IsActive = active };
+        Connection.Insert(user);
+        return user;
     }
 
     public Customer Reload(Customer customer) => Connection.Get<Customer>(customer.Id);
