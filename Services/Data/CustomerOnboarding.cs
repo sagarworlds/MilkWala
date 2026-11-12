@@ -33,22 +33,7 @@ namespace MilkWala.Services.Data
         {
             ArgumentNullException.ThrowIfNull(request);
 
-            var name = (request.Name ?? string.Empty).Trim();
-            if (name.Length == 0)
-                throw new BusinessRuleException("Enter the customer's name.");
-
-            var mobile = MobileNumber.Normalize(request.Mobile);
-            if (mobile.Length == 0)
-                throw new BusinessRuleException("Enter a valid 10-digit mobile number.");
-            if (request.Litres <= 0)
-                throw new BusinessRuleException("Daily quantity must be greater than zero.");
-            if (request.RouteId > 0 && connection.Find<DeliveryRoute>(request.RouteId) == null)
-                throw new BusinessRuleException("The selected route no longer exists. Pick another route.");
-
-            var duplicate = connection.Table<Customer>().ToList()
-                .FirstOrDefault(c => MobileNumber.Normalize(c.Mobile) == mobile);
-            if (duplicate != null)
-                throw new BusinessRuleException($"This mobile number already belongs to {duplicate.Name}.");
+            var (name, mobile) = CustomerRules.Validate(connection, request.Name, request.Mobile, request.Litres, request.RouteId);
 
             var customer = new Customer
             {

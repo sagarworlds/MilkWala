@@ -17,6 +17,7 @@
 ### 👨‍👩‍👧‍👦 Customer Portal
 - **Interactive Dashboard**: Today's delivery status, wallet balance, monthly milk statistics, and recent delivery timeline.
 - **Subscription Management**: Subscribe to Cow, Buffalo, Toned, Full Cream, or Organic milk with daily quantity controls and vacation hold dates.
+- **Extra Milk**: Order extra milk for tomorrow or a later day (up to 30 days ahead) for guests or festivals. It becomes its own delivery that day, shows in the demand forecast, and is billed when delivered; it can be cancelled until the day before.
 - **Delivery Calendar**: Visual calendar grid showing status badges (`Delivered ✓`, `Skipped`, `Holiday`, `Extra Delivery`).
 - **Wallet & Payments**: Real-time wallet balance tracking, quick UPI recharge simulation, and complete credit/debit transaction history.
 - **Dairy Products E-Commerce Store**: Add-on catalog (Curd/Dahi, Paneer, Desi Ghee, Butter) scheduled alongside daily milk deliveries.
@@ -24,7 +25,7 @@
 
 ### 🚚 Milk Vendor Portal
 - **Control Center Hub**: Real-time business KPIs (Total Customers, Today's Deliveries, Collections, Outstanding Dues).
-- **Customer Directory**: Add customers (with their daily milk subscription and route), activate or deactivate them. New customers start with an empty wallet and log in with their mobile number.
+- **Customer Directory**: Add customers (with their daily milk subscription and route), edit their details, milk, quantity and route, activate or deactivate them. New customers start with an empty wallet and log in with their mobile number.
 - **Delivery Management**: Daily delivery checklist with 1-tap `Delivered` / `Skipped` marking and GPS/proof options.
 - **Farmer Procurement & Fat% Ledger**: Log raw milk purchases from farmers, test **Fat %** and **SNF %**, calculate rates automatically (`Base ₹35 + Fat% * ₹2.0`), add farmers, and pay them (oldest purchases are settled first).
 - **Inventory & Expense Manager**: Track morning/evening stock balance against distributed milk, and record operational expenses (Fuel, Salary, Packaging, Maintenance).

@@ -23,6 +23,7 @@ internal sealed class TestDb : IDisposable
         Connection.CreateTable<Complaint>();
         Connection.CreateTable<DeliveryRoute>();
         Connection.CreateTable<User>();
+        Connection.CreateTable<SpecialOrder>();
     }
 
     public Delivery AddDelivery(Customer customer, double litres, decimal rate, DeliveryStatus status = DeliveryStatus.Pending, DateTime? date = null)
