@@ -19,20 +19,26 @@ namespace MilkWala.Services.Scheduling
         /// <param name="customers">All customers.</param>
         /// <param name="products">Milk price list; a subscription whose milk type has no price is reported, not guessed.</param>
         /// <param name="existingForDay">Deliveries already stored for that day.</param>
+        /// <param name="specialOrders">One-off extra-milk orders; each approved one for the day becomes its own delivery.</param>
         public static DeliveryPlan Plan(
             DateTime date,
             IEnumerable<Subscription> subscriptions,
             IEnumerable<Customer> customers,
             IEnumerable<Product> products,
-            IEnumerable<Delivery> existingForDay)
+            IEnumerable<Delivery> existingForDay,
+            IEnumerable<SpecialOrder>? specialOrders = null)
         {
             var day = date.Date;
             var customersById = customers.GroupBy(c => c.Id).ToDictionary(g => g.Key, g => g.First());
             var priceByMilk = products.GroupBy(p => p.MilkType).ToDictionary(g => g.Key, g => g.First().PricePerLitre);
-            var taken = existingForDay
-                .Where(d => d.DeliveryDate.Date == day)
+            var existing = existingForDay.Where(d => d.DeliveryDate.Date == day).ToList();
+            // Regular deliveries are one per customer and milk type; extras are tracked by the order they fulfil,
+            // so an extra of the same milk type does not collide with the subscription delivery.
+            var taken = existing
+                .Where(d => d.SpecialOrderId == 0)
                 .Select(d => (d.CustomerId, d.MilkType))
                 .ToHashSet();
+            var fulfilledExtras = existing.Where(d => d.SpecialOrderId > 0).Select(d => d.SpecialOrderId).ToHashSet();
 
             var created = new List<Delivery>();
             var warnings = new List<string>();
@@ -68,6 +74,39 @@ namespace MilkWala.Services.Scheduling
                     QuantityLitres = onHold ? 0 : subscription.QuantityLitres,
                     RatePerLitre = price,
                     Status = onHold ? DeliveryStatus.Holiday : DeliveryStatus.Pending
+                });
+            }
+
+            foreach (var order in specialOrders ?? Array.Empty<SpecialOrder>())
+            {
+                if (!order.IsApproved || order.TargetDate.Date != day || order.ExtraQuantityLitres <= 0)
+                    continue;
+                if (!customersById.TryGetValue(order.CustomerId, out var customer) || !customer.IsActive)
+                    continue;
+                if (!fulfilledExtras.Add(order.Id))
+                    continue;
+
+                if (!priceByMilk.TryGetValue(order.MilkType, out var extraPrice))
+                {
+                    warnings.Add($"No price is set for {order.MilkType} milk, so {customer.Name}'s extra order was not created.");
+                    fulfilledExtras.Remove(order.Id);
+                    continue;
+                }
+
+                created.Add(new Delivery
+                {
+                    CustomerId = customer.Id,
+                    CustomerName = customer.Name,
+                    Address = customer.Address,
+                    DeliveryDate = day,
+                    MilkType = order.MilkType,
+                    QuantityLitres = order.ExtraQuantityLitres,
+                    RatePerLitre = extraPrice,
+                    Status = DeliveryStatus.Pending,
+                    SpecialOrderId = order.Id,
+                    Notes = string.IsNullOrWhiteSpace(order.SpecialInstruction)
+                        ? "Extra order"
+                        : $"Extra order: {order.SpecialInstruction.Trim()}"
                 });
             }
 

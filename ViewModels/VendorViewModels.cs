@@ -107,6 +107,20 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private double _newQuantity = 1.0;
 
+        /// <summary>The customer being edited, or null when the form is adding a new one.</summary>
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsEditing))]
+        [NotifyPropertyChangedFor(nameof(FormTitle))]
+        [NotifyPropertyChangedFor(nameof(SubmitText))]
+        private int? _editingCustomerId;
+
+        public bool IsEditing => EditingCustomerId != null;
+        public string FormTitle => IsEditing ? "Edit Customer" : "Add New Customer";
+        public string SubmitText => IsEditing ? "Save changes" : "Add Customer";
+
+        // Stands in for "no route" in the picker (id 0).
+        private static readonly DeliveryRoute NoRoute = new() { Id = 0, RouteName = "— No route —" };
+
         [ObservableProperty]
         private DeliveryRoute? _selectedRoute;
 
@@ -147,49 +161,117 @@ namespace MilkWala.ViewModels
                 var routeList = await DbService.GetAllAsync<DeliveryRoute>();
                 var selectedRouteId = SelectedRoute?.Id;
                 Routes.Clear();
+                Routes.Add(NoRoute);
                 foreach (var route in routeList.OrderBy(r => r.SequenceOrder))
                 {
                     Routes.Add(route);
                 }
-                SelectedRoute = Routes.FirstOrDefault(r => r.Id == selectedRouteId) ?? Routes.FirstOrDefault();
+                SelectedRoute = Routes.FirstOrDefault(r => r.Id == selectedRouteId)
+                    ?? Routes.FirstOrDefault(r => r.Id != 0)
+                    ?? NoRoute;
             });
         }
 
+        /// <summary>Adds a new customer, or saves the changes when one is being edited.</summary>
         [RelayCommand]
-        public async Task AddCustomerAsync()
+        public async Task SaveCustomerAsync()
         {
             await RunSafeAsync(async () =>
             {
-                // New customers start tomorrow so today's delivery run is not changed halfway through.
-                var request = new NewCustomerRequest(
-                    NewCustomerName,
-                    NewCustomerMobile,
-                    NewCustomerAddress,
-                    NewMilkType,
-                    NewQuantity,
-                    SelectedRoute?.Id ?? 0,
-                    DateTime.Today.AddDays(1));
-
-                Customer? customer = null;
-                try
-                {
-                    // Customer and subscription are saved together (and the mobile checked for duplicates) or not at all.
-                    await DbService.RunInTransactionAsync(connection =>
-                        customer = CustomerOnboarding.Add(connection, request));
-                }
-                catch (BusinessRuleException ex)
-                {
-                    ErrorMessage = ex.Message;
-                    return;
-                }
-
-                NewCustomerName = string.Empty;
-                NewCustomerMobile = string.Empty;
-                NewCustomerAddress = string.Empty;
-                StatusMessage = $"{customer!.Name} added. Deliveries start {request.StartDate:dd MMM}; they can log in with {customer.Mobile}.";
-
-                await LoadCustomersAsync();
+                bool saved = EditingCustomerId == null ? await AddCustomerCoreAsync() : await UpdateCustomerCoreAsync();
+                if (saved)
+                    await LoadCustomersAsync();
             });
+        }
+
+        /// <summary>Loads a customer into the form so the vendor can change their details.</summary>
+        [RelayCommand]
+        public void EditCustomer(Customer customer)
+        {
+            if (customer == null) return;
+
+            EditingCustomerId = customer.Id;
+            NewCustomerName = customer.Name;
+            NewCustomerMobile = customer.Mobile;
+            NewCustomerAddress = customer.Address;
+            NewMilkType = customer.PreferredMilkType;
+            NewQuantity = customer.PreferredQuantity;
+            SelectedRoute = Routes.FirstOrDefault(r => r.Id == customer.RouteId) ?? NoRoute;
+            StatusMessage = $"Editing {customer.Name}. Change the details and tap Save changes.";
+        }
+
+        [RelayCommand]
+        public void CancelEdit()
+        {
+            ResetForm();
+        }
+
+        private async Task<bool> AddCustomerCoreAsync()
+        {
+            // New customers start tomorrow so today's delivery run is not changed halfway through.
+            var request = new NewCustomerRequest(
+                NewCustomerName,
+                NewCustomerMobile,
+                NewCustomerAddress,
+                NewMilkType,
+                NewQuantity,
+                SelectedRoute?.Id ?? 0,
+                DateTime.Today.AddDays(1));
+
+            Customer? customer = null;
+            try
+            {
+                // Customer and subscription are saved together (and the mobile checked for duplicates) or not at all.
+                await DbService.RunInTransactionAsync(connection =>
+                    customer = CustomerOnboarding.Add(connection, request));
+            }
+            catch (BusinessRuleException ex)
+            {
+                ErrorMessage = ex.Message;
+                return false;
+            }
+
+            ResetForm();
+            StatusMessage = $"{customer!.Name} added. Deliveries start {request.StartDate:dd MMM}; they can log in with {customer.Mobile}.";
+            return true;
+        }
+
+        private async Task<bool> UpdateCustomerCoreAsync()
+        {
+            var edit = new CustomerEdit(
+                EditingCustomerId!.Value,
+                NewCustomerName,
+                NewCustomerMobile,
+                NewCustomerAddress,
+                NewMilkType,
+                NewQuantity,
+                SelectedRoute?.Id ?? 0,
+                DateTime.Today);
+
+            Customer? customer = null;
+            try
+            {
+                await DbService.RunInTransactionAsync(connection =>
+                    customer = CustomerLedger.Update(connection, edit));
+            }
+            catch (BusinessRuleException ex)
+            {
+                ErrorMessage = ex.Message;
+                return false;
+            }
+
+            ResetForm();
+            StatusMessage = $"{customer!.Name} updated. Changes to milk or quantity apply from the next delivery that is created.";
+            return true;
+        }
+
+        private void ResetForm()
+        {
+            EditingCustomerId = null;
+            NewCustomerName = string.Empty;
+            NewCustomerMobile = string.Empty;
+            NewCustomerAddress = string.Empty;
+            NewQuantity = 1.0;
         }
 
         [RelayCommand]

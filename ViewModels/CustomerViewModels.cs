@@ -112,6 +112,26 @@ namespace MilkWala.ViewModels
         [ObservableProperty]
         private DateTime _vacationEndDate = DateTime.Today.AddDays(7);
 
+        // --- extra milk for one day
+        [ObservableProperty]
+        private DateTime _extraDate = DateTime.Today.AddDays(1);
+
+        [ObservableProperty]
+        private MilkType _extraMilkType = MilkType.Cow;
+
+        [ObservableProperty]
+        private double _extraLitres = 1.0;
+
+        [ObservableProperty]
+        private string _extraInstruction = string.Empty;
+
+        [ObservableProperty]
+        private ObservableCollection<SpecialOrder> _upcomingExtras = new();
+
+        /// <summary>Earliest and latest day an extra order can be placed for (the date picker's limits).</summary>
+        public DateTime ExtraMinDate => DateTime.Today.AddDays(1);
+        public DateTime ExtraMaxDate => DateTime.Today.AddDays(SpecialOrderLedger.MaxDaysAhead);
+
 
         public ObservableCollection<MilkType> AvailableMilkTypes { get; } = new()
         {
@@ -138,6 +158,15 @@ namespace MilkWala.ViewModels
                 var customer = await RequireCustomerAsync();
                 if (customer == null) return;
 
+                var extras = await DbService.GetAllAsync<SpecialOrder>();
+                UpcomingExtras.Clear();
+                foreach (var order in extras
+                    .Where(o => o.CustomerId == customer.Id && o.TargetDate.Date >= DateTime.Today)
+                    .OrderBy(o => o.TargetDate))
+                {
+                    UpcomingExtras.Add(order);
+                }
+
                 var subs = await DbService.GetAllAsync<Subscription>();
                 CurrentSubscription = subs.FirstOrDefault(s => s.CustomerId == customer.Id);
                 if (CurrentSubscription == null)
@@ -148,6 +177,7 @@ namespace MilkWala.ViewModels
                     SelectedMilkType = CurrentSubscription.MilkType;
                     QuantityLitres = CurrentSubscription.QuantityLitres;
                     IsPaused = CurrentSubscription.IsPaused;
+                    ExtraMilkType = CurrentSubscription.MilkType;
                 }
             });
         }
@@ -163,14 +193,81 @@ namespace MilkWala.ViewModels
                     return;
                 }
 
-                CurrentSubscription.MilkType = SelectedMilkType;
-                CurrentSubscription.QuantityLitres = QuantityLitres;
-                CurrentSubscription.IsPaused = IsPaused;
-                CurrentSubscription.UpdatedAt = DateTime.UtcNow;
+                var customer = await RequireCustomerAsync();
+                if (customer == null) return;
 
-                await DbService.UpdateWithSyncAsync(CurrentSubscription);
+                var milk = SelectedMilkType;
+                var litres = QuantityLitres;
+                try
+                {
+                    // The subscription and the customer's remembered preference change together.
+                    await DbService.RunInTransactionAsync(connection =>
+                        SubscriptionLedger.SetPlan(connection, customer.Id, milk, litres));
+                }
+                catch (BusinessRuleException ex)
+                {
+                    ErrorMessage = ex.Message;
+                    return;
+                }
 
+                // Reload so the cached subscription is not stale when a vacation hold is saved next.
+                await LoadSubscriptionAsync();
                 StatusMessage = "Subscription details saved successfully!";
+            });
+        }
+
+        [RelayCommand]
+        public async Task RequestExtraMilkAsync()
+        {
+            await RunSafeAsync(async () =>
+            {
+                var customer = await RequireCustomerAsync();
+                if (customer == null) return;
+
+                var milk = ExtraMilkType;
+                var litres = ExtraLitres;
+                var date = ExtraDate;
+                var note = ExtraInstruction;
+                try
+                {
+                    await DbService.RunInTransactionAsync(connection =>
+                        SpecialOrderLedger.Request(connection, customer.Id, milk, litres, date, note, DateTime.Today));
+                }
+                catch (BusinessRuleException ex)
+                {
+                    ErrorMessage = ex.Message;
+                    return;
+                }
+
+                ExtraInstruction = string.Empty;
+                StatusMessage = $"Extra {litres:0.0} L {milk} milk booked for {date:dd MMM}. It will be added to that day's delivery.";
+                await LoadSubscriptionAsync();
+            });
+        }
+
+        [RelayCommand]
+        public async Task CancelExtraOrderAsync(SpecialOrder order)
+        {
+            await RunSafeAsync(async () =>
+            {
+                if (order == null) return;
+
+                var customer = await RequireCustomerAsync();
+                if (customer == null) return;
+
+                try
+                {
+                    await DbService.RunInTransactionAsync(connection =>
+                        SpecialOrderLedger.Cancel(connection, order.Id, customer.Id, DateTime.Today));
+                }
+                catch (BusinessRuleException ex)
+                {
+                    ErrorMessage = ex.Message;
+                    return;
+                }
+
+                StatusMessage = $"Extra milk for {order.TargetDate:dd MMM} cancelled.";
+                await LoadSubscriptionAsync();
             });
         }
 

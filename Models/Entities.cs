@@ -109,6 +109,8 @@ namespace MilkWala.Models
         public decimal TotalPrice => (decimal)QuantityLitres * RatePerLitre;
         public DeliveryStatus Status { get; set; } = DeliveryStatus.Pending;
         public string Notes { get; set; } = string.Empty;
+        /// <summary>The extra-milk order this delivery fulfils; 0 for the regular subscription delivery.</summary>
+        public int SpecialOrderId { get; set; }
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
         public string ProofPhotoUrl { get; set; } = string.Empty;

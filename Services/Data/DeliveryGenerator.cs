@@ -22,7 +22,8 @@ namespace MilkWala.Services.Data
                 connection.Table<Subscription>().ToList(),
                 connection.Table<Customer>().ToList(),
                 connection.Table<Product>().ToList(),
-                connection.Table<Delivery>().Where(d => d.DeliveryDate >= start && d.DeliveryDate < end).ToList());
+                connection.Table<Delivery>().Where(d => d.DeliveryDate >= start && d.DeliveryDate < end).ToList(),
+                connection.Table<SpecialOrder>().Where(o => o.TargetDate >= start && o.TargetDate < end).ToList());
 
             foreach (var delivery in plan.NewDeliveries)
             {
