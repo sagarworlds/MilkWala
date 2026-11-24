@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:MilkWala.Localization"
              xmlns:controls="clr-namespace:MilkWala.Controls"
              x:Class="MilkWala.Views.Vendor.RoutesPage"
              BackgroundColor="#F8FAFC"
-             Title="Routes &amp; Delivery Staff">
+             Title="{x:Static loc:Strings.RoutesDeliveryStaff}">
 
     <Grid RowDefinitions="Auto, *">
         <controls:SyncHeaderView Grid.Row="0"/>
@@ -12,7 +13,7 @@
         <ScrollView Grid.Row="1" Padding="16">
             <VerticalStackLayout Spacing="16">
 
-                <Label Text="Delivery routes" FontSize="18" FontAttributes="Bold" TextColor="#0F172A"/>
+                <Label Text="{x:Static loc:Strings.DeliveryRoutes}" FontSize="18" FontAttributes="Bold" TextColor="#0F172A"/>
                 <CollectionView ItemsSource="{Binding Routes}">
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
@@ -21,11 +22,11 @@
                                     <VerticalStackLayout Grid.Column="0" Spacing="2">
                                         <Label Text="{Binding RouteName}" FontSize="15" FontAttributes="Bold" TextColor="#0F172A"/>
                                         <Label Text="{Binding AreaDescription}" FontSize="12" TextColor="#64748B"/>
-                                        <Label Text="{Binding StaffName, StringFormat='Delivery: {0}'}" FontSize="12" TextColor="#0EA5E9" FontAttributes="Bold"/>
+                                        <Label Text="{Binding StaffName, StringFormat={x:Static loc:Strings.FmtDeliveryBy}}" FontSize="12" TextColor="#0EA5E9" FontAttributes="Bold"/>
                                         <Label Text="{Binding CustomerCountText}" FontSize="11" TextColor="#94A3B8"/>
                                     </VerticalStackLayout>
                                     <!-- Deleting asks for confirmation first, so it is handled in the page code-behind. -->
-                                    <Button Grid.Column="1" Text="Delete" Clicked="OnDeleteClicked"
+                                    <Button Grid.Column="1" Text="{x:Static loc:Strings.Delete}" Clicked="OnDeleteClicked"
                                             BackgroundColor="#EF4444" TextColor="White" FontSize="11" CornerRadius="8" HeightRequest="36" VerticalOptions="Center"/>
                                 </Grid>
                             </Border>
@@ -36,43 +37,43 @@
                 <!-- Add a route -->
                 <Border StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
                     <VerticalStackLayout Spacing="12">
-                        <Label Text="Add a route" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
-                        <Entry Text="{Binding NewRouteName}" Placeholder="Route name (e.g. Route C - Lake View)" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
-                        <Entry Text="{Binding NewRouteArea}" Placeholder="Area covered (optional)" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
-                        <Label Text="Delivery person" FontSize="12" TextColor="#475569"/>
+                        <Label Text="{x:Static loc:Strings.AddARoute}" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
+                        <Entry Text="{Binding NewRouteName}" Placeholder="{x:Static loc:Strings.RouteNameEGRouteC}" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
+                        <Entry Text="{Binding NewRouteArea}" Placeholder="{x:Static loc:Strings.AreaCoveredOptional}" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
+                        <Label Text="{x:Static loc:Strings.DeliveryPerson}" FontSize="12" TextColor="#475569"/>
                         <Picker ItemsSource="{Binding StaffChoices}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding NewRouteStaff}" BackgroundColor="#F1F5F9" TextColor="#0F172A"/>
-                        <Button Text="Add route" Command="{Binding AddRouteCommand}" BackgroundColor="#0EA5E9" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
+                        <Button Text="{x:Static loc:Strings.AddRoute}" Command="{Binding AddRouteCommand}" BackgroundColor="#0EA5E9" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
                     </VerticalStackLayout>
                 </Border>
 
                 <!-- Change who runs a route -->
                 <Border StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
                     <VerticalStackLayout Spacing="12">
-                        <Label Text="Change who delivers a route" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
+                        <Label Text="{x:Static loc:Strings.ChangeWhoDeliversARoute}" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
                         <Picker ItemsSource="{Binding RouteChoices}" ItemDisplayBinding="{Binding RouteName}" SelectedItem="{Binding AssignRoute}" BackgroundColor="#F1F5F9" TextColor="#0F172A"/>
                         <Picker ItemsSource="{Binding StaffChoices}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding AssignStaff}" BackgroundColor="#F1F5F9" TextColor="#0F172A"/>
-                        <Button Text="Assign" Command="{Binding AssignStaffCommand}" BackgroundColor="#10B981" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
+                        <Button Text="{x:Static loc:Strings.Assign}" Command="{Binding AssignStaffCommand}" BackgroundColor="#10B981" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
                     </VerticalStackLayout>
                 </Border>
 
                 <!-- Add a delivery person -->
                 <Border StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
                     <VerticalStackLayout Spacing="12">
-                        <Label Text="Add a delivery person" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
-                        <Entry Text="{Binding NewStaffName}" Placeholder="Full name" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
-                        <Entry Text="{Binding NewStaffMobile}" Placeholder="Mobile number" Keyboard="Telephone" MaxLength="10" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
-                        <Label Text="They sign in with this number and the Delivery role." FontSize="11" TextColor="#94A3B8"/>
-                        <Button Text="Add delivery person" Command="{Binding AddStaffCommand}" BackgroundColor="#10B981" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
+                        <Label Text="{x:Static loc:Strings.AddADeliveryPerson}" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
+                        <Entry Text="{Binding NewStaffName}" Placeholder="{x:Static loc:Strings.FullName2}" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
+                        <Entry Text="{Binding NewStaffMobile}" Placeholder="{x:Static loc:Strings.MobileNumber2}" Keyboard="Telephone" MaxLength="10" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
+                        <Label Text="{x:Static loc:Strings.TheySignInWithThisNumber}" FontSize="11" TextColor="#94A3B8"/>
+                        <Button Text="{x:Static loc:Strings.AddDeliveryPerson}" Command="{Binding AddStaffCommand}" BackgroundColor="#10B981" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
                     </VerticalStackLayout>
                 </Border>
 
                 <!-- Move a customer -->
                 <Border StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
                     <VerticalStackLayout Spacing="12">
-                        <Label Text="Move a customer to another route" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
+                        <Label Text="{x:Static loc:Strings.MoveACustomerToAnotherRoute}" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
                         <Picker ItemsSource="{Binding Customers}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding MoveCustomer}" BackgroundColor="#F1F5F9" TextColor="#0F172A"/>
                         <Picker ItemsSource="{Binding MoveTargets}" ItemDisplayBinding="{Binding RouteName}" SelectedItem="{Binding MoveTarget}" BackgroundColor="#F1F5F9" TextColor="#0F172A"/>
-                        <Button Text="Move customer" Command="{Binding MoveCustomerCommand}" BackgroundColor="#F59E0B" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
+                        <Button Text="{x:Static loc:Strings.MoveCustomer}" Command="{Binding MoveCustomerCommand}" BackgroundColor="#F59E0B" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
                     </VerticalStackLayout>
                 </Border>
 

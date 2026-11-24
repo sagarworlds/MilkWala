@@ -4,8 +4,11 @@ using Xunit;
 
 namespace MilkWala.Tests;
 
+[Collection("Language")]
 public class RouteSummariesTests
 {
+    public RouteSummariesTests() => MilkWala.Localization.AppLanguage.Set("en");
+
     private static DeliveryRoute Route(int id, string name, int boyId, int sequence) =>
         new() { Id = id, RouteName = name, AreaDescription = $"Area {id}", AssignedDeliveryBoyId = boyId, SequenceOrder = sequence };
 
@@ -37,6 +40,23 @@ public class RouteSummariesTests
         Assert.Equal("Unassigned", rows[0].StaffName);
         Assert.Equal("Ravi (deactivated)", rows[1].StaffName);
         Assert.Equal("Unknown (account removed)", rows[2].StaffName);
+    }
+
+    [Fact]
+    public void Staff_and_count_texts_follow_the_current_language()
+    {
+        try
+        {
+            MilkWala.Localization.AppLanguage.Set("hi");
+            var rows = RouteSummaries.Build(new[] { Route(1, "None", 0, 1) }, Array.Empty<User>(), new[] { new Customer { RouteId = 1 }, new Customer { RouteId = 1 } });
+
+            Assert.Equal("नियुक्त नहीं", rows[0].StaffName);
+            Assert.Equal("2 ग्राहक", rows[0].CustomerCountText);
+        }
+        finally
+        {
+            MilkWala.Localization.AppLanguage.Set("en");
+        }
     }
 
     [Fact]

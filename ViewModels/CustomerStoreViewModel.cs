@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using MilkWala.Localization;
 using MilkWala.Models;
 using MilkWala.Services;
 using MilkWala.Services.Data;
@@ -29,7 +30,7 @@ namespace MilkWala.ViewModels
                 ICurrentUserService currentUser)
             : base(dbService, syncEngine, localization, loggerFactory, currentUser)
         {
-            Title = "Dairy Products Store";
+            Title = Strings.DairyProductsStore;
         }
 
         [RelayCommand]

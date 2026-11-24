@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:MilkWala.Localization"
              xmlns:controls="clr-namespace:MilkWala.Controls"
              x:Class="MilkWala.Views.Vendor.BackupPage"
              BackgroundColor="#F8FAFC"
-             Title="Backup &amp; Restore">
+             Title="{x:Static loc:Strings.BackupRestore}">
 
     <Grid RowDefinitions="Auto, *">
         <controls:SyncHeaderView Grid.Row="0"/>
@@ -14,16 +15,16 @@
 
                 <Border StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
                     <VerticalStackLayout Spacing="12">
-                        <Label Text="Back up your data" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
-                        <Label Text="Saves customers, deliveries, payments and everything else on this phone. Share the backup to keep a copy somewhere safe."
+                        <Label Text="{x:Static loc:Strings.BackUpYourData}" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
+                        <Label Text="{x:Static loc:Strings.SavesCustomersDeliveriesPaymentsAndEverything}"
                                FontSize="12" TextColor="#64748B"/>
-                        <Button Text="Create backup now" Command="{Binding CreateBackupCommand}"
+                        <Button Text="{x:Static loc:Strings.CreateBackupNow}" Command="{Binding CreateBackupCommand}"
                                 BackgroundColor="#0EA5E9" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
                     </VerticalStackLayout>
                 </Border>
 
-                <Label Text="Backups on this phone" FontSize="16" FontAttributes="Bold" TextColor="#1E293B"/>
-                <Label Text="No backups yet." FontSize="12" TextColor="#94A3B8"
+                <Label Text="{x:Static loc:Strings.BackupsOnThisPhone}" FontSize="16" FontAttributes="Bold" TextColor="#1E293B"/>
+                <Label Text="{x:Static loc:Strings.NoBackupsYet}" FontSize="12" TextColor="#94A3B8"
                        IsVisible="{Binding HasBackups, Converter={StaticResource InverseBoolConverter}}"/>
 
                 <CollectionView ItemsSource="{Binding BackupFiles}">
@@ -41,12 +42,12 @@
                                         </Label.Text>
                                     </Label>
                                     <Grid ColumnDefinitions="*, *" ColumnSpacing="8">
-                                        <Button Grid.Column="0" Text="Share"
+                                        <Button Grid.Column="0" Text="{x:Static loc:Strings.Share}"
                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ShareBackupCommand}"
                                                 CommandParameter="{Binding .}"
                                                 BackgroundColor="#6B7280" TextColor="White" CornerRadius="8" HeightRequest="40"/>
                                         <!-- Restore asks for confirmation first, so it is handled in the page code-behind. -->
-                                        <Button Grid.Column="1" Text="Restore" Clicked="OnRestoreClicked"
+                                        <Button Grid.Column="1" Text="{x:Static loc:Strings.Restore}" Clicked="OnRestoreClicked"
                                                 BackgroundColor="#EF4444" TextColor="White" CornerRadius="8" HeightRequest="40"/>
                                     </Grid>
                                 </VerticalStackLayout>

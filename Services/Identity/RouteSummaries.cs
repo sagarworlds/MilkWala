@@ -1,3 +1,4 @@
+using MilkWala.Localization;
 using MilkWala.Models;
 
 namespace MilkWala.Services.Identity
@@ -5,15 +6,15 @@ namespace MilkWala.Services.Identity
     /// <summary>One row of the vendor's route list.</summary>
     public sealed record RouteSummary(int Id, string RouteName, string AreaDescription, string StaffName, int CustomerCount)
     {
-        /// <summary>"3 customers" / "1 customer", for display.</summary>
-        public string CustomerCountText => CustomerCount == 1 ? "1 customer" : $"{CustomerCount} customers";
+        /// <summary>"3 customers" / "1 customer" in the current language, for display.</summary>
+        public string CustomerCountText => CustomerCount == 1
+            ? Strings.FmtCustomersOne
+            : string.Format(Strings.FmtCustomersMany, CustomerCount);
     }
 
     /// <summary>Builds the route list the vendor sees.</summary>
     public static class RouteSummaries
     {
-        public const string Unassigned = "Unassigned";
-
         /// <summary>
         /// Routes in run order with the delivery person's name and how many customers are on each. A route whose
         /// person is missing or deactivated says so, so the vendor can see which routes nobody can deliver.
@@ -41,10 +42,10 @@ namespace MilkWala.Services.Identity
         private static string StaffName(int userId, IReadOnlyDictionary<int, User> userById)
         {
             if (userId == 0)
-                return Unassigned;
+                return Strings.RouteUnassigned;
             if (!userById.TryGetValue(userId, out var user))
-                return "Unknown (account removed)";
-            return user.IsActive ? user.Name : $"{user.Name} (deactivated)";
+                return Strings.RouteStaffRemoved;
+            return user.IsActive ? user.Name : string.Format(Strings.FmtStaffDeactivated, user.Name);
         }
     }
 }

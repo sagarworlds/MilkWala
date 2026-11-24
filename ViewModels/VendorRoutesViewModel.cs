@@ -2,6 +2,8 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using MilkWala.Localization;
+using MilkWala.Localization;
 using MilkWala.Models;
 using MilkWala.Services;
 using MilkWala.Services.Data;
@@ -12,9 +14,10 @@ namespace MilkWala.ViewModels
     /// <summary>The vendor's routes, delivery staff and which customers are on which route.</summary>
     public partial class VendorRoutesViewModel : BaseViewModel
     {
-        // Pickers need a real item for "nobody" / "no route", so these stand in for id 0.
-        private static readonly User NoStaff = new() { Id = 0, Name = "— Unassigned —" };
-        private static readonly RouteSummary NoRoute = new(0, "— No route —", string.Empty, string.Empty, 0);
+        // Pickers need a real item for "nobody" / "no route", so these stand in for id 0. Created on use so they
+        // are in the current language (a static field would keep the language it was first created in).
+        private static User NoStaff => new() { Id = 0, Name = Strings.PickerUnassigned };
+        private static RouteSummary NoRoute => new(0, Strings.PickerNoRoute, string.Empty, string.Empty, 0);
 
         [ObservableProperty]
         private ObservableCollection<RouteSummary> _routes = new();
@@ -69,7 +72,7 @@ namespace MilkWala.ViewModels
             ILoggerFactory loggerFactory)
             : base(dbService, syncEngine, localization, loggerFactory)
         {
-            Title = "Routes & Delivery Staff";
+            Title = Strings.RoutesDeliveryStaff;
         }
 
         [RelayCommand]

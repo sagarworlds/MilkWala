@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using MilkWala.Helpers;
+using MilkWala.Localization;
 using MilkWala.Services;
 
 namespace MilkWala.ViewModels
@@ -69,13 +70,13 @@ namespace MilkWala.ViewModels
             PendingSyncCount = SyncEngine.PendingSyncCount;
 
             if (IsSyncing)
-                SyncStatusText = "Syncing with cloud...";
+                SyncStatusText = Strings.SyncSyncing;
             else if (!IsOnline)
-                SyncStatusText = $"Offline Mode ({PendingSyncCount} pending)";
+                SyncStatusText = string.Format(Strings.SyncOffline, PendingSyncCount);
             else if (PendingSyncCount > 0)
-                SyncStatusText = $"Online ({PendingSyncCount} pending upload)";
+                SyncStatusText = string.Format(Strings.SyncOnlinePending, PendingSyncCount);
             else
-                SyncStatusText = "Online & Synced";
+                SyncStatusText = Strings.SyncOnlineSynced;
         }
 
         /// <summary>
@@ -112,6 +113,13 @@ namespace MilkWala.ViewModels
                 if (ownsBusyState)
                     IsBusy = false;
             }
+        }
+
+        /// <summary>Switches the app language (en / hi / mr) and rebuilds the screens in it.</summary>
+        [RelayCommand]
+        public void SetLanguage(string code)
+        {
+            Localization.SetLanguage(code);
         }
 
         [RelayCommand]

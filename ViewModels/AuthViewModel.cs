@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using MilkWala.Localization;
 using MilkWala.Models;
 using MilkWala.Services;
 using MilkWala.Services.Identity;
@@ -36,7 +37,7 @@ namespace MilkWala.ViewModels
             : base(dbService, syncEngine, localization, loggerFactory)
         {
             _seeder = seeder;
-            Title = "Login to MilkWala";
+            Title = Strings.LoginToMilkWala;
         }
 
         [RelayCommand]

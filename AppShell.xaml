@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:MilkWala.Localization"
        xmlns:customer="clr-namespace:MilkWala.Views.Customer"
        xmlns:vendor="clr-namespace:MilkWala.Views.Vendor"
        xmlns:delivery="clr-namespace:MilkWala.Views.Delivery"
@@ -8,61 +9,61 @@
        Shell.FlyoutBehavior="Disabled"
        BackgroundColor="#0F172A"
        ForegroundColor="White"
-       Title="MilkWala">
+       Title="{x:Static loc:Strings.AppName}">
 
     <!-- Customer Role TabBar -->
     <TabBar x:Name="CustomerTabBar" Title="Customer View">
-        <Tab Title="Dashboard" Icon="icon_dashboard.svg">
+        <Tab Title="{x:Static loc:Strings.Dashboard}" Icon="icon_dashboard.svg">
             <ShellContent ContentTemplate="{DataTemplate customer:CustomerDashboardPage}" />
         </Tab>
-        <Tab Title="Store" Icon="icon_inventory.svg">
+        <Tab Title="{x:Static loc:Strings.Store}" Icon="icon_inventory.svg">
             <ShellContent ContentTemplate="{DataTemplate customer:DairyStorePage}" />
         </Tab>
-        <Tab Title="Subscribe" Icon="icon_subscribe.svg">
+        <Tab Title="{x:Static loc:Strings.Subscribe}" Icon="icon_subscribe.svg">
             <ShellContent ContentTemplate="{DataTemplate customer:SubscriptionPage}" />
         </Tab>
-        <Tab Title="Calendar" Icon="icon_calendar.svg">
+        <Tab Title="{x:Static loc:Strings.Calendar2}" Icon="icon_calendar.svg">
             <ShellContent ContentTemplate="{DataTemplate customer:DeliveryCalendarPage}" />
         </Tab>
-        <Tab Title="Wallet" Icon="icon_wallet.svg">
+        <Tab Title="{x:Static loc:Strings.Wallet}" Icon="icon_wallet.svg">
             <ShellContent ContentTemplate="{DataTemplate customer:WalletPage}" />
         </Tab>
-        <Tab Title="Support" Icon="icon_support.svg">
+        <Tab Title="{x:Static loc:Strings.Support}" Icon="icon_support.svg">
             <ShellContent ContentTemplate="{DataTemplate customer:ComplaintPage}" />
         </Tab>
     </TabBar>
 
     <!-- Vendor Role TabBar -->
     <TabBar x:Name="VendorTabBar" Title="Vendor View">
-        <Tab Title="Overview" Icon="icon_dashboard.svg">
+        <Tab Title="{x:Static loc:Strings.Overview}" Icon="icon_dashboard.svg">
             <ShellContent ContentTemplate="{DataTemplate vendor:VendorDashboardPage}" />
         </Tab>
-        <Tab Title="Customers" Icon="icon_customers.svg">
+        <Tab Title="{x:Static loc:Strings.Customers}" Icon="icon_customers.svg">
             <ShellContent ContentTemplate="{DataTemplate vendor:CustomerManagementPage}" />
         </Tab>
-        <Tab Title="Deliveries" Icon="icon_delivery.svg">
+        <Tab Title="{x:Static loc:Strings.Deliveries}" Icon="icon_delivery.svg">
             <ShellContent ContentTemplate="{DataTemplate vendor:DeliveryManagementPage}" />
         </Tab>
-        <Tab Title="Procurement" Icon="icon_inventory.svg">
+        <Tab Title="{x:Static loc:Strings.Procurement}" Icon="icon_inventory.svg">
             <ShellContent ContentTemplate="{DataTemplate vendor:ProcurementPage}" />
         </Tab>
-        <Tab Title="Inventory" Icon="icon_inventory.svg">
+        <Tab Title="{x:Static loc:Strings.Inventory}" Icon="icon_inventory.svg">
             <ShellContent ContentTemplate="{DataTemplate vendor:InventoryExpensePage}" />
         </Tab>
-        <Tab Title="Complaints" Icon="icon_support.svg">
+        <Tab Title="{x:Static loc:Strings.Complaints2}" Icon="icon_support.svg">
             <ShellContent ContentTemplate="{DataTemplate vendor:ComplaintManagementPage}" />
         </Tab>
-        <Tab Title="Reports" Icon="icon_reports.svg">
+        <Tab Title="{x:Static loc:Strings.Reports}" Icon="icon_reports.svg">
             <ShellContent ContentTemplate="{DataTemplate vendor:VendorReportsPage}" />
         </Tab>
-        <Tab Title="Backup" Icon="icon_inventory.svg">
+        <Tab Title="{x:Static loc:Strings.Backup}" Icon="icon_inventory.svg">
             <ShellContent ContentTemplate="{DataTemplate vendor:BackupPage}" />
         </Tab>
     </TabBar>
 
     <!-- Delivery Boy Role TabBar -->
     <TabBar x:Name="DeliveryTabBar" Title="Delivery Staff View">
-        <Tab Title="Assigned Route" Icon="icon_delivery.svg">
+        <Tab Title="{x:Static loc:Strings.AssignedRoute}" Icon="icon_delivery.svg">
             <ShellContent ContentTemplate="{DataTemplate delivery:DeliveryBoyPage}" />
         </Tab>
     </TabBar>

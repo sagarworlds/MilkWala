@@ -79,6 +79,9 @@ namespace MilkWala
 
             var app = builder.Build();
 
+            // Load the saved language before the first screen reads its text.
+            app.Services.GetRequiredService<LocalizationService>();
+
             // Start seeding in the background so it overlaps with app start-up. AuthViewModel awaits the same
             // single-flight task before opening the main shell, so no page can read the database too early.
             _ = WarmUpSeedDataAsync(app.Services.GetRequiredService<MockDataSeeder>());

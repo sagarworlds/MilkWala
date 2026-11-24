@@ -1,4 +1,5 @@
 using Microsoft.Maui.Controls;
+using MilkWala.Localization;
 using MilkWala.Services.Identity;
 using MilkWala.ViewModels;
 
@@ -27,10 +28,10 @@ namespace MilkWala.Views.Vendor
                 return;
 
             bool confirmed = await DisplayAlertAsync(
-                "Delete this route?",
-                $"\"{route.RouteName}\" will be removed. Routes that still have customers cannot be deleted.",
-                "Delete",
-                "Cancel");
+                Strings.DeleteThisRoute,
+                string.Format(Strings.FmtDeleteRouteConfirm, route.RouteName) + " " + Strings.RoutesThatStillHaveCustomersCannot,
+                Strings.Delete,
+                Strings.Cancel);
 
             if (confirmed)
                 await _vm.DeleteRouteCommand.ExecuteAsync(route);
