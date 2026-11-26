@@ -1,3 +1,4 @@
+using MilkWala.Localization;
 using MilkWala.Helpers;
 using MilkWala.Models;
 using SQLite;
@@ -24,20 +25,20 @@ namespace MilkWala.Services.Data
         {
             name = (name ?? string.Empty).Trim();
             if (name.Length == 0)
-                throw new BusinessRuleException("Enter the farmer's name.");
+                throw new BusinessRuleException(Strings.ErrEnterFarmerName);
 
             var normalizedMobile = MobileNumber.Normalize(mobile);
             if (normalizedMobile.Length == 0)
-                throw new BusinessRuleException("Enter a valid 10-digit mobile number.");
+                throw new BusinessRuleException(Strings.ErrEnterValidMobile);
             if (defaultFatPercent <= 0 || defaultFatPercent > 15)
-                throw new BusinessRuleException("Fat % must be between 0 and 15.");
+                throw new BusinessRuleException(Strings.ErrFatRange);
             if (defaultRatePerLitre <= 0)
-                throw new BusinessRuleException("Enter a rate per litre greater than zero.");
+                throw new BusinessRuleException(Strings.ErrRatePositive);
 
             var duplicate = connection.Table<FarmerSupplier>().ToList()
                 .FirstOrDefault(s => MobileNumber.Normalize(s.Mobile) == normalizedMobile);
             if (duplicate != null)
-                throw new BusinessRuleException($"This mobile number is already registered to {duplicate.Name}.");
+                throw new BusinessRuleException(string.Format(Strings.FmtErrMobileRegisteredTo, duplicate.Name));
 
             var supplier = new FarmerSupplier
             {
@@ -61,13 +62,13 @@ namespace MilkWala.Services.Data
         public static PayoutResult Pay(SQLiteConnection connection, int supplierId, decimal amount)
         {
             if (amount <= 0)
-                throw new BusinessRuleException("Enter a payment amount greater than zero.");
+                throw new BusinessRuleException(Strings.ErrPaymentPositive);
 
             var supplier = connection.Find<FarmerSupplier>(supplierId)
                 ?? throw new RecordNotFoundException(nameof(FarmerSupplier), supplierId);
 
             if (amount > supplier.OutstandingPayout)
-                throw new BusinessRuleException($"Only ₹{supplier.OutstandingPayout:N2} is owed to {supplier.Name}.");
+                throw new BusinessRuleException(string.Format(Strings.FmtErrOnlyOwed, supplier.OutstandingPayout, supplier.Name));
 
             decimal remaining = amount;
             int settled = 0;

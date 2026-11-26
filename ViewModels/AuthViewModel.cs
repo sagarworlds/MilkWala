@@ -47,13 +47,13 @@ namespace MilkWala.ViewModels
             {
                 if (string.IsNullOrWhiteSpace(MobileNumber) || MobileNumber.Length < 10)
                 {
-                    StatusMessage = "Please enter a valid 10-digit mobile number.";
+                    StatusMessage = Strings.ErrEnterValidMobile;
                     return;
                 }
 
                 await Task.Delay(400); // Simulate network
                 IsOtpSent = true;
-                StatusMessage = "OTP sent to " + MobileNumber + " (Use 1234)";
+                StatusMessage = string.Format(Strings.FmtOtpSent, MobileNumber);
             });
         }
 
@@ -75,7 +75,7 @@ namespace MilkWala.ViewModels
                 Preferences.Default.Set(SessionKeys.ActiveRole, SelectedRole.ToString());
                 Preferences.Default.Set(SessionKeys.UserMobile, MobileNumber);
 
-                StatusMessage = "Login Successful!";
+                StatusMessage = Strings.LoginSuccessful;
 
                 // Navigate to main application dynamic Shell tabs
                 if (Application.Current?.Windows.Count > 0)
@@ -86,7 +86,7 @@ namespace MilkWala.ViewModels
             catch (Exception ex)
             {
                 Logger.LogError(ex, "Login failed while preparing local data for role {Role}", SelectedRole);
-                StatusMessage = "Could not prepare local data. Please try again or restart the app.";
+                StatusMessage = Strings.ErrLoginPrepare;
             }
             finally
             {

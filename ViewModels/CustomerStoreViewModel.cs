@@ -80,11 +80,11 @@ namespace MilkWala.ViewModels
                 }
                 catch (InsufficientBalanceException)
                 {
-                    ErrorMessage = $"Insufficient wallet balance for {product.Name}. Please recharge.";
+                    ErrorMessage = string.Format(Strings.FmtErrInsufficientBalance, product.Name);
                     return;
                 }
 
-                StatusMessage = $"Ordered {product.Name}! Will be delivered with morning milk.";
+                StatusMessage = string.Format(Strings.FmtStoreOrdered, product.Name);
                 await LoadStoreCatalogAsync();
             });
         }

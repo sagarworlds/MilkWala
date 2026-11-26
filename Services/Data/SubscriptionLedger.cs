@@ -1,3 +1,4 @@
+using MilkWala.Localization;
 using MilkWala.Models;
 using SQLite;
 
@@ -21,7 +22,7 @@ namespace MilkWala.Services.Data
             DateTime? startIfMissing = null)
         {
             if (litres <= 0)
-                throw new BusinessRuleException("Daily quantity must be greater than zero.");
+                throw new BusinessRuleException(Strings.ErrDailyQuantityPositive);
             if (connection.Find<Customer>(customerId) == null)
                 throw new RecordNotFoundException(nameof(Customer), customerId);
 
@@ -29,7 +30,7 @@ namespace MilkWala.Services.Data
             if (subscription == null)
             {
                 if (startIfMissing == null)
-                    throw new BusinessRuleException("You do not have an active subscription yet. Please contact your vendor.");
+                    throw new BusinessRuleException(Strings.ErrNoSubscriptionYet);
 
                 subscription = new Subscription
                 {

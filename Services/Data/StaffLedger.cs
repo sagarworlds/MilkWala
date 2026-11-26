@@ -1,3 +1,4 @@
+using MilkWala.Localization;
 using MilkWala.Helpers;
 using MilkWala.Models;
 using SQLite;
@@ -15,17 +16,17 @@ namespace MilkWala.Services.Data
         {
             name = (name ?? string.Empty).Trim();
             if (name.Length == 0)
-                throw new BusinessRuleException("Enter the delivery person's name.");
+                throw new BusinessRuleException(Strings.ErrEnterStaffName);
 
             var normalized = MobileNumber.Normalize(mobile);
             if (normalized.Length == 0)
-                throw new BusinessRuleException("Enter a valid 10-digit mobile number.");
+                throw new BusinessRuleException(Strings.ErrEnterValidMobile);
 
             // Sign-in is by number AND role, so the same number may also be a customer; two staff may not share one.
             var duplicate = connection.Table<User>().ToList()
                 .FirstOrDefault(u => u.Role == UserRole.DeliveryBoy && MobileNumber.Normalize(u.MobileNumber) == normalized);
             if (duplicate != null)
-                throw new BusinessRuleException($"This mobile number already belongs to delivery person {duplicate.Name}.");
+                throw new BusinessRuleException(string.Format(Strings.FmtErrMobileBelongsToStaff, duplicate.Name));
 
             var user = new User { Name = name, MobileNumber = normalized, Role = UserRole.DeliveryBoy, IsActive = true };
             connection.Insert(user);

@@ -1,26 +1,26 @@
 using MilkWala.Helpers;
+using MilkWala.Localization;
 using Xunit;
 
 namespace MilkWala.Tests;
 
-public class OperationGuardTests
+[Collection("Language")]
+public class OperationGuardTests : IDisposable
 {
-    [Theory]
-    [InlineData("LoadDashboardDataAsync", "load dashboard data")]
-    [InlineData("AddMoneyAsync", "add money")]
-    [InlineData("OrderProduct", "order product")]
-    [InlineData("ToggleStatusAsync", "toggle status")]
-    [InlineData("Async", "complete the action")]
-    [InlineData("", "complete the action")]
-    public void Humanize_turns_method_names_into_words(string operation, string expected)
-    {
-        Assert.Equal(expected, OperationGuard.Humanize(operation));
-    }
+    public OperationGuardTests() => AppLanguage.Set("en");
+
+    public void Dispose() => AppLanguage.Set("en");
 
     [Fact]
-    public void DescribeFailure_gives_an_actionable_sentence()
+    public void The_failure_message_is_the_translated_generic_text()
     {
-        Assert.Equal("Could not load wallet. Please try again.", OperationGuard.DescribeFailure("LoadWalletAsync"));
+        Assert.Equal("Something went wrong. Please try again.", OperationGuard.DescribeFailure("LoadWalletAsync"));
+
+        AppLanguage.Set("hi");
+        Assert.Equal("कुछ गड़बड़ हो गई। कृपया फिर कोशिश करें।", OperationGuard.DescribeFailure("LoadWalletAsync"));
+
+        AppLanguage.Set("mr");
+        Assert.Equal("काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.", OperationGuard.DescribeFailure("LoadWalletAsync"));
     }
 
     [Fact]
@@ -36,16 +36,18 @@ public class OperationGuardTests
     }
 
     [Fact]
-    public async Task Failure_is_logged_with_the_exception_and_turned_into_a_message()
+    public async Task Failure_is_logged_with_the_exception_and_turned_into_a_message_in_the_current_language()
     {
+        AppLanguage.Set("hi");
         Exception? logged = null;
         var boom = new InvalidOperationException("db locked");
 
         var outcome = await OperationGuard.RunAsync(() => throw boom, ex => logged = ex, "SaveSubscriptionAsync");
 
         Assert.False(outcome.Succeeded);
-        Assert.Equal("Could not save subscription. Please try again.", outcome.ErrorMessage);
-        Assert.Same(boom, logged); // full exception reaches the logs; the user only sees the short message
+        Assert.Equal(Strings.ErrSomethingWentWrong, outcome.ErrorMessage);
+        Assert.Contains("गड़बड़", outcome.ErrorMessage);
+        Assert.Same(boom, logged); // the full exception reaches the logs; the user only sees the short message
     }
 
     [Fact]

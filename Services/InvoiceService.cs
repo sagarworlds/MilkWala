@@ -1,4 +1,5 @@
 using Microsoft.Maui.ApplicationModel;
+using MilkWala.Localization;
 using MilkWala.Helpers;
 using MilkWala.Models;
 using MilkWala.Services.Data;
@@ -23,7 +24,7 @@ namespace MilkWala.Services
         {
             var message = StatementFormatter.Build(customer, deliveries, month);
             var link = WhatsAppLink.Build(customer.Mobile, message)
-                ?? throw new BusinessRuleException($"{customer.Name}'s mobile number is not valid for WhatsApp.");
+                ?? throw new BusinessRuleException(string.Format(Strings.FmtErrWhatsAppNumber, customer.Name));
 
             return await Launcher.Default.OpenAsync(new Uri(link));
         }

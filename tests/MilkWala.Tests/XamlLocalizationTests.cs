@@ -126,4 +126,23 @@ public class XamlLocalizationTests
 
         Assert.True(offenders.Count == 0, "Hardcoded Title in: " + string.Join(", ", offenders));
     }
+
+    [Fact]
+    public void Rule_errors_and_status_messages_are_not_hardcoded_English()
+    {
+        // A message the user reads must come from Strings (translated), never a string literal.
+        var literalError = new Regex("BusinessRuleException\\(\\s*\\$?\"");
+        var literalMessage = new Regex("(StatusMessage|ErrorMessage)\\s*=\\s*\\$?\"[^\"]");
+        var offenders = new List<string>();
+
+        foreach (var dir in new[] { "Services", "ViewModels" })
+            foreach (var file in Directory.EnumerateFiles(Path.Combine(RepoRoot(), dir), "*.cs", SearchOption.AllDirectories))
+            {
+                var text = File.ReadAllText(file);
+                foreach (Match m in literalError.Matches(text).Concat(literalMessage.Matches(text)))
+                    offenders.Add($"{Path.GetFileName(file)}: {m.Value}");
+            }
+
+        Assert.True(offenders.Count == 0, "Hardcoded message (use Strings.Key):\n" + string.Join("\n", offenders));
+    }
 }

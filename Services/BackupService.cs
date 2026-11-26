@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.ApplicationModel.DataTransfer;
+using MilkWala.Localization;
 using MilkWala.Services.Data;
 
 namespace MilkWala.Services
@@ -76,7 +77,7 @@ namespace MilkWala.Services
             var path = Path.Combine(_db.BackupFolder, fileName);
             Directory.CreateDirectory(_db.BackupFolder);
             if (File.Exists(path))
-                throw new BusinessRuleException("A backup with this name already exists. Please try again in a moment.");
+                throw new BusinessRuleException(Strings.ErrBackupNameExists);
 
             await _db.Database.ExecuteAsync(SqliteBackup.SnapshotSql, path);
             SqliteBackup.Validate(path); // never report success for a file that could not be restored

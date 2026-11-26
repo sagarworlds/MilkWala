@@ -116,8 +116,8 @@ namespace MilkWala.ViewModels
         private int? _editingCustomerId;
 
         public bool IsEditing => EditingCustomerId != null;
-        public string FormTitle => IsEditing ? "Edit Customer" : "Add New Customer";
-        public string SubmitText => IsEditing ? "Save changes" : "Add Customer";
+        public string FormTitle => IsEditing ? Strings.EditCustomerTitle : Strings.AddNewCustomerTitle;
+        public string SubmitText => IsEditing ? Strings.SaveChangesButton : Strings.AddCustomerButton;
 
         // Stands in for "no route" in the picker (id 0); created on use so it is in the current language.
         private static DeliveryRoute NoRoute => new() { Id = 0, RouteName = Strings.PickerNoRoute };
@@ -198,7 +198,7 @@ namespace MilkWala.ViewModels
             NewMilkType = customer.PreferredMilkType;
             NewQuantity = customer.PreferredQuantity;
             SelectedRoute = Routes.FirstOrDefault(r => r.Id == customer.RouteId) ?? NoRoute;
-            StatusMessage = $"Editing {customer.Name}. Change the details and tap Save changes.";
+            StatusMessage = string.Format(Strings.FmtEditing, customer.Name);
         }
 
         [RelayCommand]
@@ -233,7 +233,7 @@ namespace MilkWala.ViewModels
             }
 
             ResetForm();
-            StatusMessage = $"{customer!.Name} added. Deliveries start {request.StartDate:dd MMM}; they can log in with {customer.Mobile}.";
+            StatusMessage = string.Format(Strings.FmtCustomerAdded, customer!.Name, request.StartDate, customer.Mobile);
             return true;
         }
 
@@ -262,7 +262,7 @@ namespace MilkWala.ViewModels
             }
 
             ResetForm();
-            StatusMessage = $"{customer!.Name} updated. Changes to milk or quantity apply from the next delivery that is created.";
+            StatusMessage = string.Format(Strings.FmtCustomerUpdated, customer!.Name);
             return true;
         }
 
@@ -297,9 +297,9 @@ namespace MilkWala.ViewModels
                 }
 
                 if (opened)
-                    StatusMessage = $"{month:MMMM} statement for {customer.Name} opened in WhatsApp.";
+                    StatusMessage = string.Format(Strings.FmtStatementOpened, month, customer.Name);
                 else
-                    ErrorMessage = "WhatsApp could not be opened on this device. Is it installed?";
+                    ErrorMessage = Strings.ErrWhatsAppUnavailable;
             });
         }
 
@@ -477,7 +477,7 @@ namespace MilkWala.ViewModels
 
                 ExpenseAmount = 0;
                 ExpenseDescription = string.Empty;
-                StatusMessage = "Expense logged successfully!";
+                StatusMessage = Strings.ExpenseLogged;
 
                 await LoadDataAsync();
             });

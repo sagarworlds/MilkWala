@@ -20,7 +20,7 @@ namespace MilkWala.ViewModels
         private readonly ICurrentUserService _currentUser;
 
         [ObservableProperty]
-        private string _assignedRouteName = "Loading route...";
+        private string _assignedRouteName = Strings.RouteLoading;
 
         [ObservableProperty]
         private int _totalPendingDeliveries;
@@ -56,15 +56,15 @@ namespace MilkWala.ViewModels
                 var user = await _currentUser.GetCurrentUserAsync();
                 if (user == null || user.Role != UserRole.DeliveryBoy)
                 {
-                    ShowNothing("No delivery staff account was found for the signed-in mobile number.", "No route");
+                    ShowNothing(Strings.ErrNoStaffAccount, Strings.RouteNone);
                     return;
                 }
 
                 var routes = RouteAssignment.RoutesFor(user.Id, await DbService.GetAllAsync<DeliveryRoute>());
                 if (routes.Count == 0)
                 {
-                    StatusMessage = "No route is assigned to you yet. Ask the vendor to assign one.";
-                    ShowNothing(null, "No route assigned");
+                    StatusMessage = Strings.ErrNoRouteAssigned;
+                    ShowNothing(null, Strings.RouteNoneAssigned);
                     return;
                 }
 

@@ -48,7 +48,7 @@ namespace MilkWala.ViewModels
             {
                 var backup = await _backups.CreateBackupAsync();
                 Refresh();
-                StatusMessage = $"Backup saved ({backup.SizeText}). Use Share to keep a copy off this phone.";
+                StatusMessage = string.Format(Strings.FmtBackupSaved, backup.SizeText);
             });
         }
 
@@ -80,7 +80,7 @@ namespace MilkWala.ViewModels
                 }
 
                 Refresh();
-                StatusMessage = "Backup restored. Your previous data was saved as a pre-restore backup in this list.";
+                StatusMessage = Strings.BackupRestored;
             });
         }
 

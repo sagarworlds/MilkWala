@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using MilkWala.Localization;
-using MilkWala.Localization;
 using MilkWala.Models;
 using MilkWala.Services;
 using MilkWala.Services.Data;
@@ -117,7 +116,7 @@ namespace MilkWala.ViewModels
                 connection => RouteLedger.AddRoute(connection, name, area, staffId),
                 () =>
                 {
-                    StatusMessage = $"Route \"{name.Trim()}\" added.";
+                    StatusMessage = string.Format(Strings.FmtRouteAdded, name.Trim());
                     NewRouteName = string.Empty;
                     NewRouteArea = string.Empty;
                 });
@@ -128,7 +127,7 @@ namespace MilkWala.ViewModels
         {
             if (AssignRoute == null)
             {
-                ErrorMessage = "Pick a route first.";
+                ErrorMessage = Strings.ErrPickRoute;
                 return Task.CompletedTask;
             }
 
@@ -137,8 +136,8 @@ namespace MilkWala.ViewModels
             return RunRuleAsync(
                 connection => RouteLedger.AssignStaff(connection, route.Id, staff.Id),
                 () => StatusMessage = staff.Id == 0
-                    ? $"\"{route.RouteName}\" now has nobody assigned."
-                    : $"{staff.Name} now runs \"{route.RouteName}\".");
+                    ? string.Format(Strings.FmtRouteNobody, route.RouteName)
+                    : string.Format(Strings.FmtStaffRunsRoute, staff.Name, route.RouteName));
         }
 
         [RelayCommand]
@@ -150,7 +149,7 @@ namespace MilkWala.ViewModels
                 connection => StaffLedger.AddDeliveryStaff(connection, name, mobile),
                 () =>
                 {
-                    StatusMessage = $"{name.Trim()} added. They sign in with their mobile number as delivery staff.";
+                    StatusMessage = string.Format(Strings.FmtStaffAdded, name.Trim());
                     NewStaffName = string.Empty;
                     NewStaffMobile = string.Empty;
                 });
@@ -161,7 +160,7 @@ namespace MilkWala.ViewModels
         {
             if (MoveCustomer == null || MoveTarget == null)
             {
-                ErrorMessage = "Pick a customer and a route.";
+                ErrorMessage = Strings.ErrPickCustomerRoute;
                 return Task.CompletedTask;
             }
 
@@ -170,8 +169,8 @@ namespace MilkWala.ViewModels
             return RunRuleAsync(
                 connection => RouteLedger.MoveCustomer(connection, customer.Id, target.Id),
                 () => StatusMessage = target.Id == 0
-                    ? $"{customer.Name} is no longer on any route."
-                    : $"{customer.Name} moved to \"{target.RouteName}\".");
+                    ? string.Format(Strings.FmtCustomerNoRoute, customer.Name)
+                    : string.Format(Strings.FmtCustomerMoved, customer.Name, target.RouteName));
         }
 
         [RelayCommand]
@@ -182,7 +181,7 @@ namespace MilkWala.ViewModels
 
             return RunRuleAsync(
                 connection => RouteLedger.DeleteRoute(connection, route.Id),
-                () => StatusMessage = $"Route \"{route.RouteName}\" deleted.");
+                () => StatusMessage = string.Format(Strings.FmtRouteDeleted, route.RouteName));
         }
 
         /// <summary>

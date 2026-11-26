@@ -56,6 +56,11 @@ public class TranslationsTests
         Assert.True(problems.Count == 0, string.Join("\n", problems));
     }
 
+    private sealed class Anything : IFormattable
+    {
+        public string ToString(string? format, IFormatProvider? formatProvider) => "x";
+    }
+
     [Fact]
     public void Every_format_text_can_be_formatted()
     {
@@ -65,7 +70,8 @@ public class TranslationsTests
         {
             try
             {
-                _ = string.Format(Translations.Get(lang, key), DateTime.Today, 2.5, "x");
+                // Arguments that accept any format specifier, so only a malformed placeholder (unbalanced brace, bad index) fails.
+                _ = string.Format(Translations.Get(lang, key), new Anything(), new Anything(), new Anything(), new Anything());
             }
             catch (FormatException ex)
             {

@@ -1,3 +1,4 @@
+using MilkWala.Localization;
 using MilkWala.Models;
 using SQLite;
 
@@ -43,11 +44,11 @@ namespace MilkWala.Services.Data
                 ?? throw new RecordNotFoundException(nameof(Complaint), complaintId);
 
             if (!ComplaintWorkflow.CanTransition(complaint.Status, newStatus))
-                throw new BusinessRuleException($"A {complaint.Status} complaint cannot be moved to {newStatus}.");
+                throw new BusinessRuleException(string.Format(Strings.FmtErrComplaintTransition, EnumText.For(complaint.Status), EnumText.For(newStatus)));
 
             var notes = (resolutionNotes ?? string.Empty).Trim();
             if (newStatus == ComplaintStatus.Closed && notes.Length == 0)
-                throw new BusinessRuleException("Please write what was done to resolve the complaint before closing it.");
+                throw new BusinessRuleException(Strings.ErrComplaintNeedsNotes);
 
             complaint.Status = newStatus;
             if (notes.Length > 0)

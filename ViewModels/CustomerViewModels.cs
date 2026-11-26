@@ -171,7 +171,7 @@ namespace MilkWala.ViewModels
                 var subs = await DbService.GetAllAsync<Subscription>();
                 CurrentSubscription = subs.FirstOrDefault(s => s.CustomerId == customer.Id);
                 if (CurrentSubscription == null)
-                    StatusMessage = "You do not have an active subscription yet. Please contact your vendor.";
+                    StatusMessage = Strings.ErrNoSubscriptionYet;
 
                 if (CurrentSubscription != null)
                 {
@@ -190,7 +190,7 @@ namespace MilkWala.ViewModels
             {
                 if (CurrentSubscription == null)
                 {
-                    ErrorMessage = "No active subscription was found to update.";
+                    ErrorMessage = Strings.ErrNoSubscriptionToUpdate;
                     return;
                 }
 
@@ -213,7 +213,7 @@ namespace MilkWala.ViewModels
 
                 // Reload so the cached subscription is not stale when a vacation hold is saved next.
                 await LoadSubscriptionAsync();
-                StatusMessage = "Subscription details saved successfully!";
+                StatusMessage = Strings.SubscriptionSaved;
             });
         }
 
@@ -241,7 +241,7 @@ namespace MilkWala.ViewModels
                 }
 
                 ExtraInstruction = string.Empty;
-                StatusMessage = $"Extra {litres:0.0} L {milk} milk booked for {date:dd MMM}. It will be added to that day's delivery.";
+                StatusMessage = string.Format(Strings.FmtExtraBooked, litres, EnumText.For(milk), date);
                 await LoadSubscriptionAsync();
             });
         }
@@ -267,7 +267,7 @@ namespace MilkWala.ViewModels
                     return;
                 }
 
-                StatusMessage = $"Extra milk for {order.TargetDate:dd MMM} cancelled.";
+                StatusMessage = string.Format(Strings.FmtExtraCancelled, order.TargetDate);
                 await LoadSubscriptionAsync();
             });
         }
@@ -279,7 +279,7 @@ namespace MilkWala.ViewModels
             {
                 if (CurrentSubscription == null)
                 {
-                    ErrorMessage = "No active subscription was found to update.";
+                    ErrorMessage = Strings.ErrNoSubscriptionToUpdate;
                     return;
                 }
 
@@ -291,7 +291,7 @@ namespace MilkWala.ViewModels
                 await DbService.UpdateWithSyncAsync(CurrentSubscription);
 
                 IsPaused = true;
-                StatusMessage = $"Vacation hold applied from {VacationStartDate:dd MMM} to {VacationEndDate:dd MMM}.";
+                StatusMessage = string.Format(Strings.FmtVacationApplied, VacationStartDate, VacationEndDate);
             });
         }
 
@@ -302,7 +302,7 @@ namespace MilkWala.ViewModels
             {
                 if (CurrentSubscription == null)
                 {
-                    ErrorMessage = "No active subscription was found to update.";
+                    ErrorMessage = Strings.ErrNoSubscriptionToUpdate;
                     return;
                 }
 
@@ -314,7 +314,7 @@ namespace MilkWala.ViewModels
                 await DbService.UpdateWithSyncAsync(CurrentSubscription);
 
                 IsPaused = false;
-                StatusMessage = "Subscription resumed! Daily delivery is active.";
+                StatusMessage = Strings.SubscriptionResumed;
             });
         }
     }
@@ -460,8 +460,8 @@ namespace MilkWala.ViewModels
 
                 Balance = result!.BalanceAfter;
                 StatusMessage = result.DuesCleared > 0
-                    ? $"₹{amount} added. ₹{result.DuesCleared:N2} of your dues were cleared."
-                    : $"₹{amount} added to wallet successfully!";
+                    ? string.Format(Strings.FmtWalletAddedDues, amount, result.DuesCleared)
+                    : string.Format(Strings.FmtWalletAdded, amount);
                 await LoadWalletAsync();
             });
         }
@@ -527,7 +527,7 @@ namespace MilkWala.ViewModels
             {
                 if (string.IsNullOrWhiteSpace(Subject) || string.IsNullOrWhiteSpace(Description))
                 {
-                    StatusMessage = "Please enter subject and description.";
+                    StatusMessage = Strings.ErrComplaintFields;
                     return;
                 }
 
@@ -549,7 +549,7 @@ namespace MilkWala.ViewModels
 
                 Subject = string.Empty;
                 Description = string.Empty;
-                StatusMessage = "Complaint registered! Reference ID #" + complaint.Id;
+                StatusMessage = string.Format(Strings.FmtComplaintRegistered, complaint.Id);
 
                 await LoadComplaintsAsync();
             });
