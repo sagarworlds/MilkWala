@@ -1,3 +1,4 @@
+using MilkWala.Localization;
 using MilkWala.Models;
 using SQLite;
 
@@ -15,11 +16,11 @@ namespace MilkWala.Services.Data
         {
             name = (name ?? string.Empty).Trim();
             if (name.Length == 0)
-                throw new BusinessRuleException("Enter a name for the route.");
+                throw new BusinessRuleException(Strings.ErrEnterRouteName);
 
             var existing = connection.Table<DeliveryRoute>().ToList();
             if (existing.Any(r => string.Equals(r.RouteName.Trim(), name, StringComparison.OrdinalIgnoreCase)))
-                throw new BusinessRuleException($"A route called \"{name}\" already exists.");
+                throw new BusinessRuleException(string.Format(Strings.FmtErrRouteExists, name));
 
             RequireActiveDeliveryStaff(connection, deliveryUserId);
 
@@ -60,7 +61,7 @@ namespace MilkWala.Services.Data
                 ?? throw new RecordNotFoundException(nameof(Customer), customerId);
 
             if (routeId != 0 && connection.Find<DeliveryRoute>(routeId) == null)
-                throw new BusinessRuleException("The selected route no longer exists. Pick another route.");
+                throw new BusinessRuleException(Strings.ErrRouteGone);
 
             customer.RouteId = routeId;
             customer.UpdatedAt = DateTime.UtcNow;
@@ -79,8 +80,7 @@ namespace MilkWala.Services.Data
 
             int customers = connection.Table<Customer>().Where(c => c.RouteId == routeId).Count();
             if (customers > 0)
-                throw new BusinessRuleException(
-                    $"{customers} customer(s) are still on \"{route.RouteName}\". Move them to another route first.");
+                throw new BusinessRuleException(string.Format(Strings.FmtErrRouteHasCustomers, customers, route.RouteName));
 
             connection.Delete(route);
             SyncQueueWriter.Enqueue(connection, route, SyncOperation.Delete);
@@ -92,11 +92,11 @@ namespace MilkWala.Services.Data
                 return; // unassigned
 
             var user = connection.Find<User>(userId)
-                ?? throw new BusinessRuleException("The selected delivery person no longer exists.");
+                ?? throw new BusinessRuleException(Strings.ErrStaffGone);
             if (user.Role != UserRole.DeliveryBoy)
-                throw new BusinessRuleException($"{user.Name} is not a delivery staff account.");
+                throw new BusinessRuleException(string.Format(Strings.FmtErrNotStaffAccount, user.Name));
             if (!user.IsActive)
-                throw new BusinessRuleException($"{user.Name}'s account is deactivated.");
+                throw new BusinessRuleException(string.Format(Strings.FmtErrAccountDeactivated, user.Name));
         }
     }
 }

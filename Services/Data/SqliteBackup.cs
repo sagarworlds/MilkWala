@@ -1,3 +1,4 @@
+using MilkWala.Localization;
 using MilkWala.Models;
 using SQLite;
 
@@ -34,7 +35,7 @@ namespace MilkWala.Services.Data
         public static void CreateSnapshot(SQLiteConnection source, string destinationPath)
         {
             if (File.Exists(destinationPath))
-                throw new BusinessRuleException("A backup with this name already exists. Please try again in a moment.");
+                throw new BusinessRuleException(Strings.ErrBackupNameExists);
 
             Directory.CreateDirectory(System.IO.Path.GetDirectoryName(destinationPath)!);
             source.Execute(SnapshotSql, destinationPath);
@@ -47,7 +48,7 @@ namespace MilkWala.Services.Data
         public static void Validate(string path)
         {
             if (!File.Exists(path))
-                throw new BusinessRuleException("The backup file could not be found.");
+                throw new BusinessRuleException(Strings.ErrBackupNotFound);
 
             try
             {
@@ -57,16 +58,16 @@ namespace MilkWala.Services.Data
                     .Select(t => t.Name)
                     .ToHashSet(StringComparer.OrdinalIgnoreCase);
                 if (!RequiredTables.All(tables.Contains))
-                    throw new BusinessRuleException("This file is not a MilkWala backup.");
+                    throw new BusinessRuleException(Strings.ErrNotBackup);
 
                 var integrity = connection.ExecuteScalar<string>("PRAGMA integrity_check");
                 if (!string.Equals(integrity, "ok", StringComparison.OrdinalIgnoreCase))
-                    throw new BusinessRuleException("This backup is damaged and cannot be restored.");
+                    throw new BusinessRuleException(Strings.ErrBackupDamaged);
             }
             catch (SQLiteException)
             {
                 // Not a database at all (wrong file type, truncated, encrypted, ...).
-                throw new BusinessRuleException("This file is not a MilkWala backup.");
+                throw new BusinessRuleException(Strings.ErrNotBackup);
             }
         }
 

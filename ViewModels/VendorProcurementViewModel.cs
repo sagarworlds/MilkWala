@@ -132,7 +132,7 @@ namespace MilkWala.ViewModels
             {
                 if (SelectedSupplier == null || LitresProcured <= 0)
                 {
-                    StatusMessage = "Please select a farmer supplier and enter litres.";
+                    StatusMessage = Strings.ErrSelectFarmerLitres;
                     return;
                 }
 
@@ -154,7 +154,7 @@ namespace MilkWala.ViewModels
                     proc = ProcurementLedger.Record(connection, supplierId, litres, fat, snf, rate, recordedAt);
                 });
 
-                StatusMessage = $"Procurement logged: {LitresProcured}L @ ₹{CalculatedRate:F2}/L (Total ₹{proc!.TotalAmount:N2})";
+                StatusMessage = string.Format(Strings.FmtProcurementLogged, litres, rate, proc!.TotalAmount);
                 await LoadProcurementsAsync();
             });
         }
@@ -180,7 +180,7 @@ namespace MilkWala.ViewModels
 
                 NewSupplierName = string.Empty;
                 NewSupplierMobile = string.Empty;
-                StatusMessage = $"{supplier!.Name} added as a supplier.";
+                StatusMessage = string.Format(Strings.FmtSupplierAdded, supplier!.Name);
 
                 await LoadProcurementsAsync();
                 SelectedSupplier = Suppliers.FirstOrDefault(s => s.Id == supplier.Id) ?? SelectedSupplier;
@@ -194,7 +194,7 @@ namespace MilkWala.ViewModels
             {
                 if (SelectedSupplier == null)
                 {
-                    ErrorMessage = "Select the farmer you are paying.";
+                    ErrorMessage = Strings.ErrSelectFarmerPay;
                     return;
                 }
 
@@ -213,8 +213,8 @@ namespace MilkWala.ViewModels
                     return;
                 }
 
-                StatusMessage = $"Paid ₹{amount:N2} to {result!.Supplier.Name}. " +
-                    $"{result.PurchasesSettled} purchase(s) fully settled; ₹{result.Supplier.OutstandingPayout:N2} still owed.";
+                StatusMessage = string.Format(
+                    Strings.FmtSupplierPaid, amount, result!.Supplier.Name, result.PurchasesSettled, result.Supplier.OutstandingPayout);
                 await LoadProcurementsAsync();
             });
         }

@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+using MilkWala.Localization;
 
 namespace MilkWala.Helpers
 {
@@ -43,18 +43,10 @@ namespace MilkWala.Helpers
             }
         }
 
-        /// <summary>"LoadDashboardDataAsync" becomes "Could not load dashboard data. Please try again."</summary>
-        public static string DescribeFailure(string operation) => $"Could not {Humanize(operation)}. Please try again.";
-
-        /// <summary>Turns a PascalCase method name into lower-case words, dropping a trailing "Async".</summary>
-        public static string Humanize(string operation)
-        {
-            if (string.IsNullOrWhiteSpace(operation))
-                return "complete the action";
-
-            var name = operation.EndsWith("Async", StringComparison.Ordinal) ? operation[..^"Async".Length] : operation;
-            var words = Regex.Replace(name, "(?<!^)(?=[A-Z])", " ").Trim().ToLowerInvariant();
-            return words.Length == 0 ? "complete the action" : words;
-        }
+        /// <summary>
+        /// The short, translated message shown to the user. It is deliberately generic: the log already holds the
+        /// operation name and the full exception.
+        /// </summary>
+        public static string DescribeFailure(string operation) => Strings.ErrSomethingWentWrong;
     }
 }

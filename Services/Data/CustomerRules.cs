@@ -1,3 +1,4 @@
+using MilkWala.Localization;
 using MilkWala.Helpers;
 using MilkWala.Models;
 using SQLite;
@@ -22,20 +23,20 @@ namespace MilkWala.Services.Data
         {
             var cleanName = (name ?? string.Empty).Trim();
             if (cleanName.Length == 0)
-                throw new BusinessRuleException("Enter the customer's name.");
+                throw new BusinessRuleException(Strings.ErrEnterCustomerName);
 
             var cleanMobile = MobileNumber.Normalize(mobile);
             if (cleanMobile.Length == 0)
-                throw new BusinessRuleException("Enter a valid 10-digit mobile number.");
+                throw new BusinessRuleException(Strings.ErrEnterValidMobile);
             if (litres <= 0)
-                throw new BusinessRuleException("Daily quantity must be greater than zero.");
+                throw new BusinessRuleException(Strings.ErrDailyQuantityPositive);
             if (routeId > 0 && connection.Find<DeliveryRoute>(routeId) == null)
-                throw new BusinessRuleException("The selected route no longer exists. Pick another route.");
+                throw new BusinessRuleException(Strings.ErrRouteGone);
 
             var duplicate = connection.Table<Customer>().ToList()
                 .FirstOrDefault(c => c.Id != excludeCustomerId && MobileNumber.Normalize(c.Mobile) == cleanMobile);
             if (duplicate != null)
-                throw new BusinessRuleException($"This mobile number already belongs to {duplicate.Name}.");
+                throw new BusinessRuleException(string.Format(Strings.FmtErrMobileBelongsTo, duplicate.Name));
 
             return (cleanName, cleanMobile);
         }

@@ -70,21 +70,21 @@ namespace MilkWala.ViewModels
         }
 
         [RelayCommand]
-        public Task StartWorkAsync() => ChangeStatusAsync(ComplaintStatus.InProgress, "marked in progress");
+        public Task StartWorkAsync() => ChangeStatusAsync(ComplaintStatus.InProgress, Strings.FmtComplaintInProgress);
 
         [RelayCommand]
-        public Task CloseComplaintAsync() => ChangeStatusAsync(ComplaintStatus.Closed, "closed");
+        public Task CloseComplaintAsync() => ChangeStatusAsync(ComplaintStatus.Closed, Strings.FmtComplaintClosed);
 
         [RelayCommand]
-        public Task ReopenComplaintAsync() => ChangeStatusAsync(ComplaintStatus.InProgress, "reopened");
+        public Task ReopenComplaintAsync() => ChangeStatusAsync(ComplaintStatus.InProgress, Strings.FmtComplaintReopened);
 
-        private async Task ChangeStatusAsync(ComplaintStatus target, string verb)
+        private async Task ChangeStatusAsync(ComplaintStatus target, string messageFormat)
         {
             await RunSafeAsync(async () =>
             {
                 if (SelectedComplaint == null)
                 {
-                    ErrorMessage = "Select a complaint first.";
+                    ErrorMessage = Strings.ErrPickComplaint;
                     return;
                 }
 
@@ -102,7 +102,7 @@ namespace MilkWala.ViewModels
                     return;
                 }
 
-                StatusMessage = $"Complaint #{id} {verb}.";
+                StatusMessage = string.Format(messageFormat, id);
                 await LoadComplaintsAsync();
             });
         }

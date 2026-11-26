@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using MilkWala.Localization;
 using MilkWala.Models;
 using MilkWala.Services;
 using MilkWala.Services.Identity;
@@ -29,7 +30,7 @@ namespace MilkWala.ViewModels
         {
             var customer = await CurrentUser.GetCurrentCustomerAsync();
             if (customer == null)
-                ErrorMessage = "No customer profile was found for the signed-in mobile number.";
+                ErrorMessage = Strings.ErrNoCustomerProfile;
             return customer;
         }
     }

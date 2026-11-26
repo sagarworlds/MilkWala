@@ -1,3 +1,4 @@
+using MilkWala.Localization;
 using MilkWala.Models;
 using MilkWala.Services.Reporting;
 using SQLite;
@@ -23,15 +24,15 @@ namespace MilkWala.Services.Data
             var name = Delivery.CustomerName;
             var text = Delivery.Status switch
             {
-                DeliveryStatus.Delivered or DeliveryStatus.Extra => $"Delivered to {name}.",
-                DeliveryStatus.Skipped => $"Skipped for {name}.",
-                _ => $"{name} marked {Delivery.Status}."
+                DeliveryStatus.Delivered or DeliveryStatus.Extra => string.Format(Strings.FmtDeliveredTo, name),
+                DeliveryStatus.Skipped => string.Format(Strings.FmtSkippedFor, name),
+                _ => string.Format(Strings.FmtMarkedStatus, name, EnumText.For(Delivery.Status))
             };
 
-            if (ChargedToWallet > 0) text += $" ₹{ChargedToWallet:N2} charged to wallet.";
-            if (AddedToDues > 0) text += $" ₹{AddedToDues:N2} added to dues.";
-            if (RefundedToWallet > 0) text += $" ₹{RefundedToWallet:N2} refunded to wallet.";
-            if (DuesReduced > 0) text += $" ₹{DuesReduced:N2} removed from dues.";
+            if (ChargedToWallet > 0) text += " " + string.Format(Strings.FmtChargedToWallet, ChargedToWallet);
+            if (AddedToDues > 0) text += " " + string.Format(Strings.FmtAddedToDues, AddedToDues);
+            if (RefundedToWallet > 0) text += " " + string.Format(Strings.FmtRefundedToWallet, RefundedToWallet);
+            if (DuesReduced > 0) text += " " + string.Format(Strings.FmtDuesRemoved, DuesReduced);
             return text;
         }
     }

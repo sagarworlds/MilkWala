@@ -1,3 +1,4 @@
+using MilkWala.Localization;
 using MilkWala.Models;
 using SQLite;
 
@@ -33,11 +34,11 @@ namespace MilkWala.Services.Data
             var lastDay = today.Date.AddDays(MaxDaysAhead);
 
             if (day < firstDay)
-                throw new BusinessRuleException("Extra milk must be ordered at least a day ahead. Pick tomorrow or a later date.");
+                throw new BusinessRuleException(Strings.ErrExtraDayAhead);
             if (day > lastDay)
-                throw new BusinessRuleException($"Extra milk can be ordered up to {MaxDaysAhead} days ahead.");
+                throw new BusinessRuleException(string.Format(Strings.FmtErrExtraMaxDays, MaxDaysAhead));
             if (litres < MinLitres || litres > MaxLitres)
-                throw new BusinessRuleException($"Extra quantity must be between {MinLitres:0.0} and {MaxLitres:0} litres.");
+                throw new BusinessRuleException(string.Format(Strings.FmtErrExtraQuantityRange, MinLitres, MaxLitres));
 
             var customer = connection.Find<Customer>(customerId)
                 ?? throw new RecordNotFoundException(nameof(Customer), customerId);
@@ -45,7 +46,7 @@ namespace MilkWala.Services.Data
             bool duplicate = connection.Table<SpecialOrder>().ToList().Any(o =>
                 o.CustomerId == customerId && o.TargetDate.Date == day && o.MilkType == milkType && o.IsApproved);
             if (duplicate)
-                throw new BusinessRuleException($"You already have extra {milkType} milk on {day:dd MMM}. Cancel it first to change it.");
+                throw new BusinessRuleException(string.Format(Strings.FmtErrExtraDuplicate, EnumText.For(milkType), day));
 
             var order = new SpecialOrder
             {
@@ -70,9 +71,9 @@ namespace MilkWala.Services.Data
                 ?? throw new RecordNotFoundException(nameof(SpecialOrder), orderId);
 
             if (order.CustomerId != customerId)
-                throw new BusinessRuleException("That extra order belongs to another customer.");
+                throw new BusinessRuleException(Strings.ErrExtraOtherCustomer);
             if (order.TargetDate.Date <= today.Date)
-                throw new BusinessRuleException("This extra order is for today or has passed, so it can no longer be cancelled. Please contact your vendor.");
+                throw new BusinessRuleException(Strings.ErrExtraCannotCancel);
 
             connection.Delete(order);
             SyncQueueWriter.Enqueue(connection, order, SyncOperation.Delete);
