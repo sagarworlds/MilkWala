@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using MilkWala.Localization;
 using MilkWala.Models;
 using MilkWala.Services;
 using MilkWala.Services.Data;
@@ -39,7 +40,7 @@ namespace MilkWala.ViewModels
             ILoggerFactory loggerFactory)
             : base(dbService, syncEngine, localization, loggerFactory)
         {
-            Title = "Customer Complaints";
+            Title = Strings.CustomerComplaints;
         }
 
         // Selecting a complaint loads its existing notes into the editor.

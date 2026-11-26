@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:MilkWala.Localization"
              x:Class="MilkWala.Controls.SyncHeaderView">
     <Border StrokeShape="RoundRectangle 0,0,16,16"
             BackgroundColor="#0F172A"
@@ -35,17 +36,26 @@
                        IsVisible="{Binding ErrorMessage, Converter={StaticResource StringHasTextConverter}}" />
             </StackLayout>
 
-            <Button Grid.Column="1"
-                    Text="{Binding IsOnline, Converter={StaticResource BoolToTextConverter}, ConverterParameter='Simulate Offline|Simulate Online'}"
-                    Command="{Binding ToggleSyncCommand}"
-                    BackgroundColor="#1E293B"
-                    TextColor="#38BDF8"
-                    BorderColor="#38BDF8"
-                    BorderWidth="1"
-                    CornerRadius="8"
-                    FontSize="12"
-                    Padding="12,6"
-                    VerticalOptions="Center" />
+            <VerticalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center" HorizontalOptions="End">
+                <!-- Language: changing it rebuilds the screens in the chosen language. -->
+                <HorizontalStackLayout Spacing="4" HorizontalOptions="End">
+                    <Button Text="EN" Command="{Binding SetLanguageCommand}" CommandParameter="en"
+                            BackgroundColor="#334155" TextColor="White" CornerRadius="6" FontSize="11" Padding="8,2" HeightRequest="30" MinimumWidthRequest="38"/>
+                    <Button Text="हिं" Command="{Binding SetLanguageCommand}" CommandParameter="hi"
+                            BackgroundColor="#334155" TextColor="White" CornerRadius="6" FontSize="11" Padding="8,2" HeightRequest="30" MinimumWidthRequest="38"/>
+                    <Button Text="मरा" Command="{Binding SetLanguageCommand}" CommandParameter="mr"
+                            BackgroundColor="#334155" TextColor="White" CornerRadius="6" FontSize="11" Padding="8,2" HeightRequest="30" MinimumWidthRequest="38"/>
+                </HorizontalStackLayout>
+                <Button Text="{Binding IsOnline, Converter={StaticResource BoolToTextConverter}, ConverterParameter={x:Static loc:Strings.BoolSimulate}}"
+                        Command="{Binding ToggleSyncCommand}"
+                        BackgroundColor="#1E293B"
+                        TextColor="#38BDF8"
+                        BorderColor="#38BDF8"
+                        BorderWidth="1"
+                        CornerRadius="8"
+                        FontSize="12"
+                        Padding="12,6" />
+            </VerticalStackLayout>
         </Grid>
     </Border>
 </ContentView>

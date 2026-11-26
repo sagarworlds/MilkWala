@@ -1,4 +1,5 @@
 using Microsoft.Maui.Controls;
+using MilkWala.Localization;
 using MilkWala.Services.Data;
 using MilkWala.ViewModels;
 
@@ -27,11 +28,10 @@ namespace MilkWala.Views.Vendor
                 return;
 
             bool confirmed = await DisplayAlertAsync(
-                "Restore this backup?",
-                $"All current data will be replaced by the backup from {backup.CreatedAt:dd MMM yyyy, hh:mm tt}. " +
-                "Your current data is saved first, so you can undo this.",
-                "Restore",
-                "Cancel");
+                Strings.RestoreThisBackup,
+                string.Format(Strings.FmtRestoreConfirm, backup.CreatedAt) + " " + Strings.YourCurrentDataIsSavedFirst,
+                Strings.Restore,
+                Strings.Cancel);
 
             if (confirmed)
                 await _vm.RestoreBackupCommand.ExecuteAsync(backup);

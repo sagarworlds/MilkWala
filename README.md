@@ -45,7 +45,7 @@
 - **WhatsApp Monthly Statements**: From the customer directory, open a ready-typed monthly statement (each delivery, totals, wallet and dues) in WhatsApp. It is plain text, not a PDF.
 - **Demand Forecast**: Litres of each milk type to have ready tomorrow, counted with the same rules as delivery generation (active customers, alternate-day plans, vacation holds, approved extra orders). It is a rule-based count, not a prediction model.
 - **Backup & Restore** (vendor): Create a consistent snapshot of all data while the app is running, share it off the phone, and restore it later. Restoring checks the file first and saves the current data as a pre-restore backup so it can be undone.
-- **Languages** *(in progress)*: `LocalizationService` holds English, Marathi (मराठी) and Hindi (हिंदी) strings, but the screens are not translated yet and there is no language picker.
+- **Languages**: English, Hindi (हिन्दी) and Marathi (मराठी). Pick one with the EN / हिं / मरा buttons on the login page or the header of any screen; the choice is remembered. All screen text is translated: titles, labels, buttons, hints, delivery and complaint statuses, milk types, and dates follow the language. Messages shown after an action (for example "Delivered to Rahul. ₹93.00 charged to wallet.") and errors from rule checks, and text people or the demo data entered, are still English. The translations have not been reviewed by native speakers.
 
 ---
 
@@ -131,6 +131,7 @@ CI runs these tests and an Android build of the app on every pull request.
 - **Multi-step writes:** use `LocalDbService.RunInTransactionAsync` (or `InsertWithSyncAsync` / `UpdateWithSyncAsync`) so a change and its sync-queue entry commit together. Wallet, store and procurement rules live in `Services/Data/*Ledger.cs`.
 - **Daily deliveries & billing:** each day's deliveries are generated from active subscriptions (vacation holds become `Holiday` rows; `Alternate` plans skip off days). Marking a delivery delivered charges the wallet first and puts any shortfall on the customer's dues; correcting it reverses the exact split; a recharge also pays off dues. Rules live in `Services/Scheduling` and `Services/Data/DeliveryLedger.cs`.
 - **Messages:** `StatusMessage` (outcome of an action) and `ErrorMessage` (rule broken / failure) live on `BaseViewModel` and are shown in the shared header on every page. Throw `BusinessRuleException` for a rule the user can fix; its text is shown as is.
+- **Screen text:** never hardcode it. Add the text to all three dictionaries in `Localization/Translations.cs` and use `{x:Static loc:Strings.Key}` in XAML (or `Strings.Key` in code); tests fail on a missing translation, a mismatched `{0}` parameter, a misspelt key or hardcoded English in a screen. Changing language rebuilds the screens, so text is read when a screen loads.
 - **View-model commands:** wrap the body in `RunSafeAsync` so failures are logged and shown in the header banner instead of leaving the screen busy.
 
 ---

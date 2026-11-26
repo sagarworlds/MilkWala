@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using MilkWala.Localization;
 using MilkWala.Models;
 using MilkWala.Services;
 using MilkWala.Services.Scheduling;
@@ -52,7 +53,7 @@ namespace MilkWala.ViewModels
             : base(dbService, syncEngine, localization, loggerFactory, currentUser)
         {
             _deliveryScheduler = deliveryScheduler;
-            Title = "Customer Dashboard";
+            Title = Strings.CustomerDashboard;
         }
 
         [RelayCommand]
@@ -146,7 +147,7 @@ namespace MilkWala.ViewModels
                 ICurrentUserService currentUser)
             : base(dbService, syncEngine, localization, loggerFactory, currentUser)
         {
-            Title = "Manage Subscription";
+            Title = Strings.ManageSubscription;
         }
 
         [RelayCommand]
@@ -343,7 +344,7 @@ namespace MilkWala.ViewModels
                 ICurrentUserService currentUser)
             : base(dbService, syncEngine, localization, loggerFactory, currentUser)
         {
-            Title = "Delivery Calendar";
+            Title = Strings.Calendar;
         }
 
         [RelayCommand]
@@ -410,7 +411,7 @@ namespace MilkWala.ViewModels
                 ICurrentUserService currentUser)
             : base(dbService, syncEngine, localization, loggerFactory, currentUser)
         {
-            Title = "Wallet & Payments";
+            Title = Strings.WalletPayments;
         }
 
         [RelayCommand]
@@ -498,7 +499,7 @@ namespace MilkWala.ViewModels
                 ICurrentUserService currentUser)
             : base(dbService, syncEngine, localization, loggerFactory, currentUser)
         {
-            Title = "Complaints & Support";
+            Title = Strings.Complaints;
         }
 
         [RelayCommand]

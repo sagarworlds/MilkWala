@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:MilkWala.Localization"
              xmlns:controls="clr-namespace:MilkWala.Controls"
              x:Class="MilkWala.Views.Vendor.ProcurementPage"
              BackgroundColor="#F8FAFC"
-             Title="Farmer Milk Procurement">
+             Title="{x:Static loc:Strings.FarmerMilkProcurement}">
 
     <Grid RowDefinitions="Auto, *">
         <controls:SyncHeaderView Grid.Row="0"/>
@@ -15,74 +16,74 @@
                 <!-- Log Procurement Form -->
                 <Border StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
                     <VerticalStackLayout Spacing="12">
-                        <Label Text="Farmer Milk Purchase &amp; Fat Test" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
+                        <Label Text="{x:Static loc:Strings.FarmerMilkPurchaseFatTest}" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
 
-                        <Label Text="Select Farmer / Supplier:" FontSize="12" TextColor="#475569"/>
+                        <Label Text="{x:Static loc:Strings.SelectFarmerSupplier}" FontSize="12" TextColor="#475569"/>
                         <Picker ItemsSource="{Binding Suppliers}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding SelectedSupplier}" BackgroundColor="#F1F5F9" TextColor="#0F172A"/>
 
                         <Grid ColumnDefinitions="*, *" ColumnSpacing="8">
                             <VerticalStackLayout Grid.Column="0">
-                                <Label Text="Procured Litres" FontSize="11" TextColor="#64748B"/>
+                                <Label Text="{x:Static loc:Strings.ProcuredLitres}" FontSize="11" TextColor="#64748B"/>
                                 <Entry Text="{Binding LitresProcured}" Keyboard="Numeric" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
                             </VerticalStackLayout>
 
                             <VerticalStackLayout Grid.Column="1">
-                                <Label Text="Tested Fat %" FontSize="11" TextColor="#64748B"/>
+                                <Label Text="{x:Static loc:Strings.TestedFat}" FontSize="11" TextColor="#64748B"/>
                                 <Entry Text="{Binding FatPercent}" Keyboard="Numeric" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
                             </VerticalStackLayout>
                         </Grid>
 
                         <Grid ColumnDefinitions="*, *" ColumnSpacing="8">
                             <VerticalStackLayout Grid.Column="0">
-                                <Label Text="Calculated Rate / Litre" FontSize="11" TextColor="#64748B"/>
+                                <Label Text="{x:Static loc:Strings.CalculatedRateLitre}" FontSize="11" TextColor="#64748B"/>
                                 <Label Text="{Binding CalculatedRate, Converter={StaticResource CurrencyFormatConverter}}" FontSize="16" FontAttributes="Bold" TextColor="#0EA5E9"/>
                             </VerticalStackLayout>
 
                             <VerticalStackLayout Grid.Column="1">
-                                <Label Text="Total Purchase Amount" FontSize="11" TextColor="#64748B"/>
+                                <Label Text="{x:Static loc:Strings.TotalPurchaseAmount}" FontSize="11" TextColor="#64748B"/>
                                 <Label Text="{Binding TotalProcurementAmount, Converter={StaticResource CurrencyFormatConverter}}" FontSize="16" FontAttributes="Bold" TextColor="#10B981"/>
                             </VerticalStackLayout>
                         </Grid>
 
-                        <Button Text="Record Milk Purchase" Command="{Binding RecordProcurementCommand}" BackgroundColor="#10B981" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
+                        <Button Text="{x:Static loc:Strings.RecordMilkPurchase}" Command="{Binding RecordProcurementCommand}" BackgroundColor="#10B981" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
                     </VerticalStackLayout>
                 </Border>
 
                 <!-- Pay the selected farmer -->
                 <Border StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
                     <VerticalStackLayout Spacing="12">
-                        <Label Text="Pay Farmer" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
-                        <Label Text="{Binding SelectedSupplierOutstanding, Converter={StaticResource CurrencyFormatConverter}, StringFormat='Owed to the selected farmer: {0}'}"
+                        <Label Text="{x:Static loc:Strings.PayFarmer}" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
+                        <Label Text="{Binding SelectedSupplierOutstanding, Converter={StaticResource CurrencyFormatConverter}, StringFormat={x:Static loc:Strings.FmtOwedToFarmer}}"
                                FontSize="13" TextColor="#EF4444" FontAttributes="Bold"/>
-                        <Label Text="Amount to pay now (oldest purchases are settled first)" FontSize="11" TextColor="#64748B"/>
+                        <Label Text="{x:Static loc:Strings.AmountToPayNowOldestPurchases}" FontSize="11" TextColor="#64748B"/>
                         <Entry Text="{Binding PayoutAmount}" Keyboard="Numeric" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
-                        <Button Text="Record Payment" Command="{Binding PaySupplierCommand}" BackgroundColor="#0EA5E9" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
+                        <Button Text="{x:Static loc:Strings.RecordPayment}" Command="{Binding PaySupplierCommand}" BackgroundColor="#0EA5E9" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
                     </VerticalStackLayout>
                 </Border>
 
                 <!-- Register a new farmer -->
                 <Border StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
                     <VerticalStackLayout Spacing="12">
-                        <Label Text="Add Farmer / Supplier" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
-                        <Entry Text="{Binding NewSupplierName}" Placeholder="Farmer or farm name" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
-                        <Entry Text="{Binding NewSupplierMobile}" Placeholder="Mobile Number" Keyboard="Telephone" MaxLength="10" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
-                        <Picker ItemsSource="{Binding AvailableMilkTypes}" SelectedItem="{Binding NewSupplierMilkType}" BackgroundColor="#F1F5F9" TextColor="#0F172A"/>
+                        <Label Text="{x:Static loc:Strings.AddFarmerSupplier}" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
+                        <Entry Text="{Binding NewSupplierName}" Placeholder="{x:Static loc:Strings.FarmerOrFarmName}" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
+                        <Entry Text="{Binding NewSupplierMobile}" Placeholder="{x:Static loc:Strings.MobileNumber}" Keyboard="Telephone" MaxLength="10" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
+                        <Picker ItemsSource="{Binding AvailableMilkTypes}" ItemDisplayBinding="{Binding ., Converter={StaticResource EnumTextConverter}}" SelectedItem="{Binding NewSupplierMilkType}" BackgroundColor="#F1F5F9" TextColor="#0F172A"/>
                         <Grid ColumnDefinitions="*, *" ColumnSpacing="8">
                             <VerticalStackLayout Grid.Column="0">
-                                <Label Text="Usual Fat %" FontSize="11" TextColor="#64748B"/>
+                                <Label Text="{x:Static loc:Strings.UsualFat}" FontSize="11" TextColor="#64748B"/>
                                 <Entry Text="{Binding NewSupplierFatPercent}" Keyboard="Numeric" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1">
-                                <Label Text="Usual rate / litre" FontSize="11" TextColor="#64748B"/>
+                                <Label Text="{x:Static loc:Strings.UsualRateLitre}" FontSize="11" TextColor="#64748B"/>
                                 <Entry Text="{Binding NewSupplierRate}" Keyboard="Numeric" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
                             </VerticalStackLayout>
                         </Grid>
-                        <Button Text="Add Farmer" Command="{Binding AddSupplierCommand}" BackgroundColor="#10B981" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
+                        <Button Text="{x:Static loc:Strings.AddFarmer}" Command="{Binding AddSupplierCommand}" BackgroundColor="#10B981" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
                     </VerticalStackLayout>
                 </Border>
 
                 <!-- Purchase History Ledger -->
-                <Label Text="Procurement History Ledger" FontSize="16" FontAttributes="Bold" TextColor="#1E293B" Margin="0,8,0,0"/>
+                <Label Text="{x:Static loc:Strings.ProcurementHistoryLedger}" FontSize="16" FontAttributes="Bold" TextColor="#1E293B" Margin="0,8,0,0"/>
 
                 <CollectionView ItemsSource="{Binding Procurements}">
                     <CollectionView.ItemTemplate>
@@ -93,7 +94,7 @@
                                         <Label Text="{Binding SupplierName}" FontSize="14" FontAttributes="Bold" TextColor="#0F172A"/>
                                         <Label FontSize="12" TextColor="#64748B">
                                             <Label.Text>
-                                                <MultiBinding StringFormat="Fat: {0}% • SNF: {1}%">
+                                                <MultiBinding StringFormat="{x:Static loc:Strings.FmtFatSnf}">
                                                     <Binding Path="FatPercent"/>
                                                     <Binding Path="SnfPercent"/>
                                                 </MultiBinding>
@@ -103,9 +104,9 @@
                                     </VerticalStackLayout>
 
                                     <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                                        <Label Text="{Binding Litres, StringFormat='{0} Litres'}" FontSize="14" FontAttributes="Bold" TextColor="#0EA5E9" HorizontalOptions="End"/>
+                                        <Label Text="{Binding Litres, StringFormat={x:Static loc:Strings.FmtLitres}}" FontSize="14" FontAttributes="Bold" TextColor="#0EA5E9" HorizontalOptions="End"/>
                                         <Label Text="{Binding TotalAmount, Converter={StaticResource CurrencyFormatConverter}}" FontSize="13" FontAttributes="Bold" TextColor="#10B981" HorizontalOptions="End"/>
-                                        <Label Text="{Binding IsPaid, Converter={StaticResource BoolToTextConverter}, ConverterParameter='Paid|Payment due'}"
+                                        <Label Text="{Binding IsPaid, Converter={StaticResource BoolToTextConverter}, ConverterParameter={x:Static loc:Strings.BoolPaidDue}}"
                                                TextColor="{Binding IsPaid, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#10B981|#F59E0B'}"
                                                FontSize="11" FontAttributes="Bold" HorizontalOptions="End"/>
                                     </VerticalStackLayout>

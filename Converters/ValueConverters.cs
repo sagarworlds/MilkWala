@@ -3,6 +3,7 @@ using System.Globalization;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 using MilkWala.Helpers;
+using MilkWala.Localization;
 using MilkWala.Models;
 
 namespace MilkWala.Converters
@@ -46,6 +47,20 @@ namespace MilkWala.Converters
                     _ => Color.FromArgb("#6B7280")
                 }
                 : Color.FromArgb("#6B7280");
+        }
+
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            throw new NotSupportedException();
+        }
+    }
+
+    /// <summary>Shows an enum value (delivery status, milk type, ...) in the current language.</summary>
+    public class EnumTextConverter : IValueConverter
+    {
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            return value is Enum e ? EnumText.For(e) : value?.ToString() ?? string.Empty;
         }
 
         public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

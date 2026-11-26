@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:MilkWala.Localization"
              xmlns:controls="clr-namespace:MilkWala.Controls"
              x:Class="MilkWala.Views.Customer.SubscriptionPage"
              BackgroundColor="#F8FAFC"
-             Title="Manage Subscription">
+             Title="{x:Static loc:Strings.ManageSubscription}">
 
     <Grid RowDefinitions="Auto, *">
         <controls:SyncHeaderView Grid.Row="0"/>
@@ -16,13 +17,13 @@
                 <Border StrokeShape="RoundRectangle 12" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
                     <Grid ColumnDefinitions="*, Auto">
                         <VerticalStackLayout Grid.Column="0" Spacing="2">
-                            <Label Text="Subscription Status" FontSize="12" TextColor="#64748B"/>
-                            <Label Text="{Binding IsPaused, Converter={StaticResource BoolToTextConverter}, ConverterParameter='PAUSED|Active', StringFormat='Status: {0}'}"
+                            <Label Text="{x:Static loc:Strings.SubscriptionStatus}" FontSize="12" TextColor="#64748B"/>
+                            <Label Text="{Binding IsPaused, Converter={StaticResource BoolToTextConverter}, ConverterParameter={x:Static loc:Strings.BoolPausedActive}, StringFormat={x:Static loc:Strings.FmtStatus}}"
                                    FontSize="16" FontAttributes="Bold"
                                    TextColor="{Binding IsPaused, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#F59E0B|#10B981'}"/>
                         </VerticalStackLayout>
 
-                        <Button Grid.Column="1" Text="Resume Delivery"
+                        <Button Grid.Column="1" Text="{x:Static loc:Strings.ResumeDelivery}"
                                 Command="{Binding ResumeDeliveryCommand}"
                                 IsVisible="{Binding IsPaused}"
                                 BackgroundColor="#10B981" TextColor="White" CornerRadius="8" FontSize="12"/>
@@ -32,19 +33,19 @@
                 <!-- Milk Preference Card -->
                 <Border StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
                     <VerticalStackLayout Spacing="14">
-                        <Label Text="Milk Preference &amp; Daily Quantity" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
+                        <Label Text="{x:Static loc:Strings.MilkPreferenceDailyQuantity}" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
 
-                        <Label Text="Select Milk Type:" FontSize="13" TextColor="#475569"/>
-                        <Picker ItemsSource="{Binding AvailableMilkTypes}"
+                        <Label Text="{x:Static loc:Strings.SelectMilkType}" FontSize="13" TextColor="#475569"/>
+                        <Picker ItemsSource="{Binding AvailableMilkTypes}" ItemDisplayBinding="{Binding ., Converter={StaticResource EnumTextConverter}}"
                                 SelectedItem="{Binding SelectedMilkType}"
                                 BackgroundColor="#F1F5F9"
                                 TextColor="#0F172A"
-                                Title="Select Milk Type"/>
+                                Title="{x:Static loc:Strings.SelectMilkType2}"/>
 
-                        <Label Text="{Binding QuantityLitres, StringFormat='Daily Quantity: {0:F1} Litres'}" FontSize="13" TextColor="#475569"/>
+                        <Label Text="{Binding QuantityLitres, StringFormat={x:Static loc:Strings.FmtDailyQuantity}}" FontSize="13" TextColor="#475569"/>
                         <Stepper Value="{Binding QuantityLitres}" Minimum="0.5" Maximum="10.0" Increment="0.5"/>
 
-                        <Button Text="Save Subscription"
+                        <Button Text="{x:Static loc:Strings.SaveSubscription}"
                                 Command="{Binding SaveSubscriptionCommand}"
                                 BackgroundColor="#0EA5E9" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
                     </VerticalStackLayout>
@@ -53,24 +54,24 @@
                 <!-- Extra milk for one day -->
                 <Border StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
                     <VerticalStackLayout Spacing="14">
-                        <Label Text="Extra Milk for a Day" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
-                        <Label Text="Guests or a festival? Order extra for tomorrow or a later day (up to 30 days ahead). It is added to that day's delivery and billed when delivered." FontSize="12" TextColor="#64748B"/>
+                        <Label Text="{x:Static loc:Strings.ExtraMilkForADay}" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
+                        <Label Text="{x:Static loc:Strings.GuestsOrAFestivalOrderExtra}" FontSize="12" TextColor="#64748B"/>
 
-                        <Label Text="Day" FontSize="12" TextColor="#475569"/>
+                        <Label Text="{x:Static loc:Strings.Day}" FontSize="12" TextColor="#475569"/>
                         <DatePicker Date="{Binding ExtraDate}" MinimumDate="{Binding ExtraMinDate}" MaximumDate="{Binding ExtraMaxDate}" Format="dd/MM/yyyy"/>
 
-                        <Label Text="Milk type" FontSize="12" TextColor="#475569"/>
-                        <Picker ItemsSource="{Binding AvailableMilkTypes}" SelectedItem="{Binding ExtraMilkType}" BackgroundColor="#F1F5F9" TextColor="#0F172A"/>
+                        <Label Text="{x:Static loc:Strings.MilkType2}" FontSize="12" TextColor="#475569"/>
+                        <Picker ItemsSource="{Binding AvailableMilkTypes}" ItemDisplayBinding="{Binding ., Converter={StaticResource EnumTextConverter}}" SelectedItem="{Binding ExtraMilkType}" BackgroundColor="#F1F5F9" TextColor="#0F172A"/>
 
-                        <Label Text="{Binding ExtraLitres, StringFormat='Extra quantity: {0:F1} Litres'}" FontSize="12" TextColor="#475569"/>
+                        <Label Text="{Binding ExtraLitres, StringFormat={x:Static loc:Strings.FmtExtraQuantity}}" FontSize="12" TextColor="#475569"/>
                         <Stepper Value="{Binding ExtraLitres}" Minimum="0.5" Maximum="10.0" Increment="0.5"/>
 
-                        <Entry Text="{Binding ExtraInstruction}" Placeholder="Note for the delivery person (optional)" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
+                        <Entry Text="{Binding ExtraInstruction}" Placeholder="{x:Static loc:Strings.NoteForTheDeliveryPersonOptional}" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
 
-                        <Button Text="Order Extra Milk" Command="{Binding RequestExtraMilkCommand}"
+                        <Button Text="{x:Static loc:Strings.OrderExtraMilk}" Command="{Binding RequestExtraMilkCommand}"
                                 BackgroundColor="#8B5CF6" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
 
-                        <Label Text="Your upcoming extra orders" FontSize="13" FontAttributes="Bold" TextColor="#0F172A" Margin="0,6,0,0"/>
+                        <Label Text="{x:Static loc:Strings.YourUpcomingExtraOrders}" FontSize="13" FontAttributes="Bold" TextColor="#0F172A" Margin="0,6,0,0"/>
                         <CollectionView ItemsSource="{Binding UpcomingExtras}">
                             <CollectionView.ItemTemplate>
                                 <DataTemplate>
@@ -79,14 +80,14 @@
                                             <Label Text="{Binding TargetDate, StringFormat='{0:ddd, dd MMM yyyy}'}" FontSize="13" FontAttributes="Bold" TextColor="#0F172A"/>
                                             <Label FontSize="12" TextColor="#64748B">
                                                 <Label.Text>
-                                                    <MultiBinding StringFormat="{}{0:F1} L {1}">
+                                                    <MultiBinding StringFormat="{x:Static loc:Strings.FmtLitresMilk}">
                                                         <Binding Path="ExtraQuantityLitres"/>
-                                                        <Binding Path="MilkType"/>
+                                                        <Binding Path="MilkType" Converter="{StaticResource EnumTextConverter}"/>
                                                     </MultiBinding>
                                                 </Label.Text>
                                             </Label>
                                         </VerticalStackLayout>
-                                        <Button Grid.Column="1" Text="Cancel"
+                                        <Button Grid.Column="1" Text="{x:Static loc:Strings.Cancel}"
                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.CancelExtraOrderCommand}"
                                                 CommandParameter="{Binding .}"
                                                 BackgroundColor="#EF4444" TextColor="White" FontSize="11" CornerRadius="8" HeightRequest="34"/>
@@ -100,22 +101,22 @@
                 <!-- Temporary Vacation Hold Card -->
                 <Border StrokeShape="RoundRectangle 16" BackgroundColor="White" Stroke="#E2E8F0" Padding="16">
                     <VerticalStackLayout Spacing="14">
-                        <Label Text="Temporary Vacation Hold" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
-                        <Label Text="Pause milk deliveries while out of town." FontSize="12" TextColor="#64748B"/>
+                        <Label Text="{x:Static loc:Strings.TemporaryVacationHold}" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
+                        <Label Text="{x:Static loc:Strings.PauseMilkDeliveriesWhileOutOf}" FontSize="12" TextColor="#64748B"/>
 
                         <Grid ColumnDefinitions="*, *" ColumnSpacing="12">
                             <VerticalStackLayout Grid.Column="0" Spacing="4">
-                                <Label Text="Start Date" FontSize="12" TextColor="#475569"/>
+                                <Label Text="{x:Static loc:Strings.StartDate}" FontSize="12" TextColor="#475569"/>
                                 <DatePicker Date="{Binding VacationStartDate}" Format="dd/MM/yyyy"/>
                             </VerticalStackLayout>
 
                             <VerticalStackLayout Grid.Column="1" Spacing="4">
-                                <Label Text="End Date" FontSize="12" TextColor="#475569"/>
+                                <Label Text="{x:Static loc:Strings.EndDate}" FontSize="12" TextColor="#475569"/>
                                 <DatePicker Date="{Binding VacationEndDate}" Format="dd/MM/yyyy"/>
                             </VerticalStackLayout>
                         </Grid>
 
-                        <Button Text="Apply Vacation Hold"
+                        <Button Text="{x:Static loc:Strings.ApplyVacationHold}"
                                 Command="{Binding ApplyVacationHoldCommand}"
                                 BackgroundColor="#F59E0B" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
                     </VerticalStackLayout>

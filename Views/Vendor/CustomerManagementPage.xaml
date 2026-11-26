@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:MilkWala.Localization"
              xmlns:controls="clr-namespace:MilkWala.Controls"
              x:Class="MilkWala.Views.Vendor.CustomerManagementPage"
              BackgroundColor="#F8FAFC"
-             Title="Customer Management">
+             Title="{x:Static loc:Strings.CustomerManagement}">
 
     <Grid RowDefinitions="Auto, *">
         <controls:SyncHeaderView Grid.Row="0"/>
@@ -12,7 +13,7 @@
         <ScrollView Grid.Row="1" Padding="16">
             <VerticalStackLayout Spacing="16">
 
-                <Button Text="Manage routes &amp; delivery staff" Clicked="OnManageRoutesClicked"
+                <Button Text="{x:Static loc:Strings.ManageRoutesDeliveryStaff}" Clicked="OnManageRoutesClicked"
                         BackgroundColor="#0F172A" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
 
                 <!-- Add New Customer Card -->
@@ -20,26 +21,26 @@
                     <VerticalStackLayout Spacing="12">
                         <Label Text="{Binding FormTitle}" FontSize="16" FontAttributes="Bold" TextColor="#0F172A"/>
 
-                        <Entry Text="{Binding NewCustomerName}" Placeholder="Full Name" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
-                        <Entry Text="{Binding NewCustomerMobile}" Placeholder="Mobile Number" Keyboard="Telephone" MaxLength="10" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
-                        <Entry Text="{Binding NewCustomerAddress}" Placeholder="Delivery Address &amp; Flat No" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
+                        <Entry Text="{Binding NewCustomerName}" Placeholder="{x:Static loc:Strings.FullName}" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
+                        <Entry Text="{Binding NewCustomerMobile}" Placeholder="{x:Static loc:Strings.MobileNumber}" Keyboard="Telephone" MaxLength="10" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
+                        <Entry Text="{Binding NewCustomerAddress}" Placeholder="{x:Static loc:Strings.DeliveryAddressFlatNo}" BackgroundColor="#F8FAFC" TextColor="#0F172A"/>
 
-                        <Label Text="Daily milk" FontSize="12" TextColor="#475569"/>
-                        <Picker ItemsSource="{Binding AvailableMilkTypes}" SelectedItem="{Binding NewMilkType}" BackgroundColor="#F1F5F9" TextColor="#0F172A"/>
-                        <Label Text="{Binding NewQuantity, StringFormat='Daily quantity: {0:F1} Litres'}" FontSize="12" TextColor="#475569"/>
+                        <Label Text="{x:Static loc:Strings.DailyMilk}" FontSize="12" TextColor="#475569"/>
+                        <Picker ItemsSource="{Binding AvailableMilkTypes}" ItemDisplayBinding="{Binding ., Converter={StaticResource EnumTextConverter}}" SelectedItem="{Binding NewMilkType}" BackgroundColor="#F1F5F9" TextColor="#0F172A"/>
+                        <Label Text="{Binding NewQuantity, StringFormat={x:Static loc:Strings.FmtDailyQuantity}}" FontSize="12" TextColor="#475569"/>
                         <Stepper Value="{Binding NewQuantity}" Minimum="0.5" Maximum="10.0" Increment="0.5"/>
 
-                        <Label Text="Delivery route" FontSize="12" TextColor="#475569"/>
+                        <Label Text="{x:Static loc:Strings.DeliveryRoute}" FontSize="12" TextColor="#475569"/>
                         <Picker ItemsSource="{Binding Routes}" ItemDisplayBinding="{Binding RouteName}" SelectedItem="{Binding SelectedRoute}" BackgroundColor="#F1F5F9" TextColor="#0F172A"/>
-                        <Label Text="Deliveries start tomorrow. The customer logs in with this mobile number." FontSize="11" TextColor="#94A3B8"/>
+                        <Label Text="{x:Static loc:Strings.DeliveriesStartTomorrowTheCustomerLogs}" FontSize="11" TextColor="#94A3B8"/>
 
                         <Button Text="{Binding SubmitText}" Command="{Binding SaveCustomerCommand}" BackgroundColor="#0EA5E9" TextColor="White" FontAttributes="Bold" CornerRadius="8" HeightRequest="44"/>
-                        <Button Text="Cancel" Command="{Binding CancelEditCommand}" IsVisible="{Binding IsEditing}" BackgroundColor="#6B7280" TextColor="White" CornerRadius="8" HeightRequest="40"/>
+                        <Button Text="{x:Static loc:Strings.Cancel}" Command="{Binding CancelEditCommand}" IsVisible="{Binding IsEditing}" BackgroundColor="#6B7280" TextColor="White" CornerRadius="8" HeightRequest="40"/>
                     </VerticalStackLayout>
                 </Border>
 
                 <!-- Customer List -->
-                <Label Text="Customer Directory" FontSize="16" FontAttributes="Bold" TextColor="#1E293B" Margin="0,8,0,0"/>
+                <Label Text="{x:Static loc:Strings.CustomerDirectory}" FontSize="16" FontAttributes="Bold" TextColor="#1E293B" Margin="0,8,0,0"/>
 
                 <CollectionView ItemsSource="{Binding CustomerList}">
                     <CollectionView.ItemTemplate>
@@ -52,25 +53,25 @@
                                         <Label Text="{Binding Address}" FontSize="11" TextColor="#94A3B8" MaxLines="1"/>
                                         <Label FontSize="12" TextColor="#0EA5E9">
                                             <Label.Text>
-                                                <MultiBinding StringFormat="Prefers: {0}L {1}">
+                                                <MultiBinding StringFormat="{x:Static loc:Strings.FmtPrefers}">
                                                     <Binding Path="PreferredQuantity"/>
-                                                    <Binding Path="PreferredMilkType"/>
+                                                    <Binding Path="PreferredMilkType" Converter="{StaticResource EnumTextConverter}"/>
                                                 </MultiBinding>
                                             </Label.Text>
                                         </Label>
                                     </VerticalStackLayout>
 
                                     <VerticalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
-                                        <Button Text="{Binding IsActive, Converter={StaticResource BoolToTextConverter}, ConverterParameter='Active|Inactive'}"
+                                        <Button Text="{Binding IsActive, Converter={StaticResource BoolToTextConverter}, ConverterParameter={x:Static loc:Strings.BoolActiveInactive}}"
                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ToggleStatusCommand}"
                                                 CommandParameter="{Binding .}"
                                                 BackgroundColor="{Binding IsActive, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#10B981|#6B7280'}"
                                                 TextColor="White" FontSize="11" CornerRadius="8" HeightRequest="36"/>
-                                        <Button Text="Edit"
+                                        <Button Text="{x:Static loc:Strings.Edit}"
                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditCustomerCommand}"
                                                 CommandParameter="{Binding .}"
                                                 BackgroundColor="#0EA5E9" TextColor="White" FontSize="11" CornerRadius="8" HeightRequest="36"/>
-                                        <Button Text="Statement"
+                                        <Button Text="{x:Static loc:Strings.Statement}"
                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ShareStatementCommand}"
                                                 CommandParameter="{Binding .}"
                                                 BackgroundColor="#25D366" TextColor="White" FontSize="11" CornerRadius="8" HeightRequest="36"/>

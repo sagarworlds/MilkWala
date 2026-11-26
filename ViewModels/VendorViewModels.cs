@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using MilkWala.Localization;
 using MilkWala.Models;
 using MilkWala.Services;
 using MilkWala.Services.Data;
@@ -47,7 +48,7 @@ namespace MilkWala.ViewModels
             : base(dbService, syncEngine, localization, loggerFactory)
         {
             _deliveryScheduler = deliveryScheduler;
-            Title = "Vendor Control Center";
+            Title = Strings.VendorControlCenter;
         }
 
         [RelayCommand]
@@ -118,8 +119,8 @@ namespace MilkWala.ViewModels
         public string FormTitle => IsEditing ? "Edit Customer" : "Add New Customer";
         public string SubmitText => IsEditing ? "Save changes" : "Add Customer";
 
-        // Stands in for "no route" in the picker (id 0).
-        private static readonly DeliveryRoute NoRoute = new() { Id = 0, RouteName = "— No route —" };
+        // Stands in for "no route" in the picker (id 0); created on use so it is in the current language.
+        private static DeliveryRoute NoRoute => new() { Id = 0, RouteName = Strings.PickerNoRoute };
 
         [ObservableProperty]
         private DeliveryRoute? _selectedRoute;
@@ -142,7 +143,7 @@ namespace MilkWala.ViewModels
             : base(dbService, syncEngine, localization, loggerFactory)
         {
             _statements = statements;
-            Title = "Customer Management";
+            Title = Strings.CustomerManagement;
         }
 
         [RelayCommand]
@@ -334,7 +335,7 @@ namespace MilkWala.ViewModels
             : base(dbService, syncEngine, localization, loggerFactory)
         {
             _deliveryScheduler = deliveryScheduler;
-            Title = "Delivery Management";
+            Title = Strings.DeliveryManagement;
         }
 
         [RelayCommand]
@@ -424,7 +425,7 @@ namespace MilkWala.ViewModels
                 ILoggerFactory loggerFactory)
             : base(dbService, syncEngine, localization, loggerFactory)
         {
-            Title = "Inventory & Expenses";
+            Title = Strings.InventoryExpenses;
         }
 
         [RelayCommand]
@@ -526,7 +527,7 @@ namespace MilkWala.ViewModels
             : base(dbService, syncEngine, localization, loggerFactory)
         {
             _demandForecast = demandForecast;
-            Title = "Reports & Analytics";
+            Title = Strings.ReportsAnalytics;
         }
 
         [RelayCommand]

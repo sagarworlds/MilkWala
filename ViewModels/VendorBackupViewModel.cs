@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using MilkWala.Localization;
 using MilkWala.Services;
 using MilkWala.Services.Data;
 
@@ -27,7 +28,7 @@ namespace MilkWala.ViewModels
             : base(dbService, syncEngine, localization, loggerFactory)
         {
             _backups = backups;
-            Title = "Backup & Restore";
+            Title = Strings.BackupRestore;
         }
 
         [RelayCommand]

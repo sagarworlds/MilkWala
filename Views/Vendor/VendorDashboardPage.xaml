@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:MilkWala.Localization"
              xmlns:controls="clr-namespace:MilkWala.Controls"
              x:Class="MilkWala.Views.Vendor.VendorDashboardPage"
              BackgroundColor="#F8FAFC"
-             Title="Vendor Control Center">
+             Title="{x:Static loc:Strings.VendorControlCenter}">
 
     <Grid RowDefinitions="Auto, *">
         <controls:SyncHeaderView Grid.Row="0"/>
@@ -16,28 +17,28 @@
                 <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto" RowSpacing="12" ColumnSpacing="12">
                     <Border Grid.Row="0" Grid.Column="0" StrokeShape="RoundRectangle 16" BackgroundColor="#0F172A" Padding="16" StrokeThickness="0">
                         <VerticalStackLayout Spacing="4">
-                            <Label Text="Total Customers" FontSize="12" TextColor="#94A3B8"/>
+                            <Label Text="{x:Static loc:Strings.TotalCustomers}" FontSize="12" TextColor="#94A3B8"/>
                             <Label Text="{Binding TotalCustomers}" FontSize="24" FontAttributes="Bold" TextColor="White"/>
                         </VerticalStackLayout>
                     </Border>
 
                     <Border Grid.Row="0" Grid.Column="1" StrokeShape="RoundRectangle 16" BackgroundColor="#0EA5E9" Padding="16" StrokeThickness="0">
                         <VerticalStackLayout Spacing="4">
-                            <Label Text="Today's Deliveries" FontSize="12" TextColor="#E0F2FE"/>
+                            <Label Text="{x:Static loc:Strings.TodaySDeliveries}" FontSize="12" TextColor="#E0F2FE"/>
                             <Label Text="{Binding TodaysTotalDeliveries}" FontSize="24" FontAttributes="Bold" TextColor="White"/>
                         </VerticalStackLayout>
                     </Border>
 
                     <Border Grid.Row="1" Grid.Column="0" StrokeShape="RoundRectangle 16" BackgroundColor="#10B981" Padding="16" StrokeThickness="0">
                         <VerticalStackLayout Spacing="4">
-                            <Label Text="Today's Collection" FontSize="12" TextColor="#D1FAE5"/>
+                            <Label Text="{x:Static loc:Strings.TodaySCollection}" FontSize="12" TextColor="#D1FAE5"/>
                             <Label Text="{Binding TodayCollection, Converter={StaticResource CurrencyFormatConverter}}" FontSize="20" FontAttributes="Bold" TextColor="White"/>
                         </VerticalStackLayout>
                     </Border>
 
                     <Border Grid.Row="1" Grid.Column="1" StrokeShape="RoundRectangle 16" BackgroundColor="#EF4444" Padding="16" StrokeThickness="0">
                         <VerticalStackLayout Spacing="4">
-                            <Label Text="Outstanding Dues" FontSize="12" TextColor="#FEE2E2"/>
+                            <Label Text="{x:Static loc:Strings.Outstanding}" FontSize="12" TextColor="#FEE2E2"/>
                             <Label Text="{Binding TotalOutstandingAmount, Converter={StaticResource CurrencyFormatConverter}}" FontSize="20" FontAttributes="Bold" TextColor="White"/>
                         </VerticalStackLayout>
                     </Border>
@@ -45,8 +46,8 @@
 
                 <!-- Pending Deliveries Checklist -->
                 <Grid ColumnDefinitions="*, Auto" Margin="0,8,0,0">
-                    <Label Grid.Column="0" Text="Pending Deliveries Today" FontSize="16" FontAttributes="Bold" TextColor="#1E293B"/>
-                    <Label Grid.Column="1" Text="{Binding PendingDeliveriesCount, StringFormat='{0} Left'}" FontSize="13" TextColor="#F59E0B" FontAttributes="Bold"/>
+                    <Label Grid.Column="0" Text="{x:Static loc:Strings.PendingDeliveriesToday}" FontSize="16" FontAttributes="Bold" TextColor="#1E293B"/>
+                    <Label Grid.Column="1" Text="{Binding PendingDeliveriesCount, StringFormat={x:Static loc:Strings.FmtLeft}}" FontSize="13" TextColor="#F59E0B" FontAttributes="Bold"/>
                 </Grid>
 
                 <CollectionView ItemsSource="{Binding PendingDeliveriesList}">
@@ -59,8 +60,8 @@
                                         <Label Text="{Binding Address}" FontSize="11" TextColor="#64748B" MaxLines="1"/>
                                         <Label FontSize="12" TextColor="#0EA5E9" FontAttributes="Bold">
                                             <Label.Text>
-                                                <MultiBinding StringFormat="{}{0} - {1} Litres">
-                                                    <Binding Path="MilkType"/>
+                                                <MultiBinding StringFormat="{x:Static loc:Strings.FmtMilkLitres}">
+                                                    <Binding Path="MilkType" Converter="{StaticResource EnumTextConverter}"/>
                                                     <Binding Path="QuantityLitres"/>
                                                 </MultiBinding>
                                             </Label.Text>
@@ -68,7 +69,7 @@
                                     </VerticalStackLayout>
 
                                     <Border Grid.Column="1" StrokeShape="RoundRectangle 8" Padding="10,4" BackgroundColor="#F59E0B" VerticalOptions="Center">
-                                        <Label Text="Pending" FontSize="12" TextColor="White" FontAttributes="Bold"/>
+                                        <Label Text="{x:Static loc:Strings.Pending}" FontSize="12" TextColor="White" FontAttributes="Bold"/>
                                     </Border>
                                 </Grid>
                             </Border>
